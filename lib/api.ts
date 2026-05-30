@@ -1,5 +1,11 @@
 import { Match, MatchStage, MatchStatus } from './types';
 
+export function normalize(str: string): string {
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 const SPORTSDB_BASE_URL = 'https://www.thesportsdb.com/api/v1/json/123';
 
 export const STAGE_LABELS: Record<MatchStage, string> = {

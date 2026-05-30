@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import { calculatePoints } from '@/lib/api';
+import { calculatePoints, normalize } from '@/lib/api';
 import { MatchStage } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     const existing = userStats.get(sb.user_id) || { totalPoints: 0, exactCount: 0 };
     let bonus = 0;
     if (actualChampion && sb.champion === actualChampion) bonus += 50;
-    if (actualTopScorer && sb.top_scorer === actualTopScorer) bonus += 50;
+    if (actualTopScorer && sb.top_scorer && normalize(sb.top_scorer) === normalize(actualTopScorer)) bonus += 50;
     if (bonus > 0) {
       userStats.set(sb.user_id, {
         totalPoints: existing.totalPoints + bonus,

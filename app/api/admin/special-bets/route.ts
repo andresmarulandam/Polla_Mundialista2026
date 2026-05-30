@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { normalize } from '@/lib/api';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     ...bet,
     user_name: userMap.get(bet.user_id) || 'Desconocido',
     is_champion_correct: settingsMap['champion'] && bet.champion === settingsMap['champion'],
-    is_scorer_correct: settingsMap['top_scorer'] && bet.top_scorer === settingsMap['top_scorer'],
+    is_scorer_correct: settingsMap['top_scorer'] && bet.top_scorer && normalize(bet.top_scorer) === normalize(settingsMap['top_scorer']),
   })) || [];
 
   return NextResponse.json({
