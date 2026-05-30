@@ -13,6 +13,7 @@ export interface Match {
   away_team: string;
   match_datetime: string;
   venue: string | null;
+  country: string | null;
   stage: MatchStage;
   group_name: string | null;
   home_score: number | null;

@@ -18,6 +18,7 @@ CREATE TABLE matches (
   away_team TEXT NOT NULL,
   match_datetime TIMESTAMPTZ NOT NULL,
   venue TEXT,
+  country TEXT,
   stage TEXT NOT NULL CHECK (stage IN ('group_stage', 'round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final')),
   group_name TEXT,
   home_score INTEGER,

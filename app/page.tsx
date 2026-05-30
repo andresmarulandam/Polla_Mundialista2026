@@ -2,13 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserSession } from '@/lib/types';
+import { UserSession, MatchStage } from '@/lib/types';
 import {
   STAGES_ORDER,
   canPredict,
   getTimeRemaining,
   formatMatchDateTime,
+  calculatePoints,
 } from '@/lib/api';
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  Mexico: '\u{1F1F2}\u{1F1FD}',
+  'Estados Unidos': '\u{1F1FA}\u{1F1F8}',
+  Canada: '\u{1F1E8}\u{1F1E6}',
+};
 
 interface MatchWithPrediction {
   id: string;
@@ -17,6 +24,7 @@ interface MatchWithPrediction {
   away_team: string;
   match_datetime: string;
   venue: string | null;
+  country: string | null;
   stage: string;
   group_name: string | null;
   home_score: number | null;
@@ -230,7 +238,15 @@ function MatchCard({
 
   const pending = pendingPredictions.get(match.id);
   const isFinished = match.status === 'finished';
-  const points = match.user_prediction?.points_earned;
+  const points = match.user_prediction && match.home_score != null && match.away_score != null
+    ? calculatePoints(
+        match.user_prediction.home_score_predicted,
+        match.user_prediction.away_score_predicted,
+        match.home_score,
+        match.away_score,
+        match.stage as MatchStage
+      )
+    : match.user_prediction?.points_earned ?? 0;
 
   function updatePending(home: number | undefined, away: number | undefined) {
     setPendingPredictions((prev) => {
@@ -312,12 +328,13 @@ function MatchCard({
 
   return (
     <div
-      className={`card ${isFinished && points != null && points > 0 ? 'border-green-500' : ''}`}
+      className={`card ${isFinished && hasExistingPrediction && points > 0 ? 'border-green-500' : ''}`}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-text-secondary">
           {formatMatchDateTime(match.match_datetime)}
           {match.venue && ` - ${match.venue}`}
+          {match.country && ` (${COUNTRY_FLAGS[match.country] || ''} ${match.country})`}
         </div>
         <div className="text-sm font-medium text-secondary">
           {matchOpen ? getTimeRemaining(match as any) : 'Cerrado'}
@@ -429,20 +446,31 @@ function MatchCard({
         </div>
       )}
 
-      {points != null && isFinished && (
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-text-secondary">Puntos:</span>
-          <span
-            className={`font-bold ${points > 0 ? 'text-green-400' : 'text-text-secondary'}`}
-          >
-            {points}
+      {hasExistingPrediction && isFinished && (
+        <div className="mt-3 text-sm text-text-secondary">
+          Tu pronostico:{' '}
+          <span className="font-bold text-white">
+            {match.user_prediction!.home_score_predicted} -{' '}
+            {match.user_prediction!.away_score_predicted}
           </span>
-          {points >= 5 && <span className="text-green-400">Score exacto!</span>}
-          {points >= 3 && points < 5 && (
-            <span className="text-yellow-400">Ganador/draw correcto</span>
-          )}
         </div>
       )}
+
+      {hasExistingPrediction && isFinished && (() => {
+        const predictedHome = match.user_prediction!.home_score_predicted;
+        const predictedAway = match.user_prediction!.away_score_predicted;
+        const isExact = predictedHome === match.home_score && predictedAway === match.away_score;
+        return (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-text-secondary">Puntos:</span>
+            <span className={`font-bold ${points > 0 ? 'text-green-400' : 'text-text-secondary'}`}>
+              {points}
+            </span>
+            {isExact && <span className="text-green-400">Resultado exacto!</span>}
+            {!isExact && points > 0 && <span className="text-yellow-400">Ganador/empate correcto</span>}
+          </div>
+        );
+      })()}
 
       {match.group_name && (
         <div className="mt-2 text-xs text-text-secondary">
