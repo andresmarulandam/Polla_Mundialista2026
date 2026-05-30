@@ -13,13 +13,6 @@ interface AdminUser {
 
 const POPULAR_LEAGUES = [
   { id: 4429, name: '🏆 Mundial FIFA 2026', season: '2026' },
-  { id: 4328, name: 'Premier League (Inglaterra)', season: '2024-2025' },
-  { id: 4330, name: 'La Liga (España)', season: '2024-2025' },
-  { id: 4331, name: 'Bundesliga (Alemania)', season: '2024-2025' },
-  { id: 4332, name: 'Serie A (Italia)', season: '2024-2025' },
-  { id: 4334, name: 'Ligue 1 (Francia)', season: '2024-2025' },
-  { id: 4480, name: 'Copa Libertadores', season: '2025' },
-  { id: 4500, name: 'Champions League', season: '2024-2025' },
 ];
 
 export default function AdminPage() {
@@ -30,7 +23,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [selectedLeague, setSelectedLeague] = useState(4429);
-  const [lastSyncInfo, setLastSyncInfo] = useState<{last_sync_at: string; matches_updated: number} | null>(null);
+  const [lastSyncInfo, setLastSyncInfo] = useState<{
+    last_sync_at: string;
+    matches_updated: number;
+  } | null>(null);
 
   useEffect(() => {
     checkSession();
@@ -40,12 +36,12 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/session');
       const data = await res.json();
-      
+
       if (!res.ok || !data.session || !data.session.is_admin) {
         router.push('/');
         return;
       }
-      
+
       setSession(data.session);
       loadData();
     } catch {
@@ -59,10 +55,10 @@ export default function AdminPage() {
         fetch('/api/admin/users'),
         fetch('/api/admin/sync-info'),
       ]);
-      
+
       const usersData = await usersRes.json();
       const syncData = await syncRes.json();
-      
+
       setUsers(usersData.users || []);
       setLastSyncInfo(syncData.syncLog || null);
     } catch (err) {
@@ -76,7 +72,7 @@ export default function AdminPage() {
     setSyncing(true);
     setMessage('');
 
-    const league = POPULAR_LEAGUES.find(l => l.id === selectedLeague);
+    const league = POPULAR_LEAGUES.find((l) => l.id === selectedLeague);
 
     try {
       const res = await fetch('/api/admin/sync', {
@@ -84,13 +80,15 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           leagueId: selectedLeague,
-          season: league?.season || '2024-2025'
+          season: league?.season || '2024-2025',
         }),
       });
       const data = await res.json();
-      
+
       if (res.ok) {
-        setMessage(`Sincronizados ${data.matchesUpdated} de ${data.totalFetched} partidos de ${league?.name}`);
+        setMessage(
+          `Sincronizados ${data.matchesUpdated} de ${data.totalFetched} partidos de ${league?.name}`,
+        );
         loadData();
       } else {
         setMessage(data.error || 'Error al sincronizar');
@@ -136,15 +134,17 @@ export default function AdminPage() {
 
       <div className="card">
         <h2 className="text-xl font-bold mb-4">Sincronizar API</h2>
-        
+
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Seleccionar Liga</label>
+          <label className="block text-sm font-medium mb-2">
+            Seleccionar Liga
+          </label>
           <select
             value={selectedLeague}
-            onChange={e => setSelectedLeague(Number(e.target.value))}
+            onChange={(e) => setSelectedLeague(Number(e.target.value))}
             className="input w-full"
           >
-            {POPULAR_LEAGUES.map(league => (
+            {POPULAR_LEAGUES.map((league) => (
               <option key={league.id} value={league.id}>
                 {league.name}
               </option>
@@ -160,14 +160,16 @@ export default function AdminPage() {
           >
             {syncing ? 'Sincronizando...' : 'Sync API'}
           </button>
-          
+
           {lastSyncInfo && (
             <span className="text-text-secondary text-sm">
-              Última sync: {new Date(lastSyncInfo.last_sync_at).toLocaleString('es-MX')} ({lastSyncInfo.matches_updated} partidos)
+              Última sync:{' '}
+              {new Date(lastSyncInfo.last_sync_at).toLocaleString('es-MX')} (
+              {lastSyncInfo.matches_updated} partidos)
             </span>
           )}
         </div>
-        
+
         {message && <p className="mt-3 text-green-400">{message}</p>}
       </div>
 
@@ -184,7 +186,7 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map(user => (
+              {users.map((user) => (
                 <tr key={user.id} className="border-t border-gray-800">
                   <td className="px-4 py-3 font-medium">{user.name}</td>
                   <td className="px-4 py-3 text-center">

@@ -22,12 +22,17 @@ export const STAGES_ORDER: { stage: MatchStage; label: string }[] = [
   { stage: 'final', label: 'Gran Final' },
 ];
 
-export async function fetchMatchesFromAPI(leagueId: number = 4429, season: string = '2026'): Promise<Partial<Match>[]> {
+export async function fetchMatchesFromAPI(
+  leagueId: number = 4429,
+  season: string = '2026',
+): Promise<Partial<Match>[]> {
   try {
-    console.log(`[API] Fetching from: ${SPORTSDB_BASE_URL}/eventsseason.php?id=${leagueId}&s=${season}`);
-    
+    console.log(
+      `[API] Fetching from: ${SPORTSDB_BASE_URL}/eventsseason.php?id=${leagueId}&s=${season}`,
+    );
+
     const response = await fetch(
-      `${SPORTSDB_BASE_URL}/eventsseason.php?id=${leagueId}&s=${season}`
+      `${SPORTSDB_BASE_URL}/eventsseason.php?id=${leagueId}&s=${season}`,
     );
 
     console.log(`[API] Response status: ${response.status}`);
@@ -39,12 +44,15 @@ export async function fetchMatchesFromAPI(leagueId: number = 4429, season: strin
 
     const text = await response.text();
     console.log(`[API] Response preview: ${text.substring(0, 200)}`);
-    
+
     try {
       const data = JSON.parse(text);
-      
+
       if (!data.events) {
-        console.log('[API] No events in response, data keys:', Object.keys(data));
+        console.log(
+          '[API] No events in response, data keys:',
+          Object.keys(data),
+        );
         return [];
       }
 
@@ -62,7 +70,7 @@ export async function fetchMatchesFromAPI(leagueId: number = 4429, season: strin
 
 function mapEventToMatch(event: any): Partial<Match> {
   const stage = mapStage(event.strGroup, event.strRound);
-  
+
   let matchDatetime: string;
   if (event.dateEvent && event.strTime) {
     const timeMatch = event.strTime.match(/^(\d{2}):(\d{2}):(\d{2})/);
@@ -85,17 +93,17 @@ function mapEventToMatch(event: any): Partial<Match> {
     venue: event.strVenue,
     stage,
     group_name: event.strGroup || null,
-    home_score: event.intHomeScore ? parseInt(event.intHomeScore) : null,
-    away_score: event.intAwayScore ? parseInt(event.intAwayScore) : null,
+    home_score: event.intHomeScore ? Number.parseInt(event.intHomeScore) : null,
+    away_score: event.intAwayScore ? Number.parseInt(event.intAwayScore) : null,
     status: mapStatus(event.strStatus),
   };
 }
 
 function mapStage(group: string | null, round: string | null): MatchStage {
   if (!round) return 'group_stage';
-  
+
   const roundLower = round.toLowerCase();
-  
+
   if (roundLower.includes('third') || roundLower.includes('3rd')) {
     return 'third_place';
   }
@@ -108,21 +116,30 @@ function mapStage(group: string | null, round: string | null): MatchStage {
   if (roundLower.includes('quart') || roundLower.includes('quarter')) {
     return 'quarter_final';
   }
-  if (roundLower.includes('octa') || roundLower.includes('round of 16') || roundLower.includes('16th')) {
+  if (
+    roundLower.includes('octa') ||
+    roundLower.includes('round of 16') ||
+    roundLower.includes('16th')
+  ) {
     return 'round_of_16';
   }
   if (roundLower.includes('round of 32') || roundLower.includes('32nd')) {
     return 'round_of_32';
   }
-  
+
   return 'group_stage';
 }
 
 function mapStatus(status: string | null): MatchStatus {
   if (!status) return 'pending';
-  
+
   const statusLower = status.toLowerCase();
-  if (statusLower === 'finished' || statusLower === 'ft' || statusLower === 'final' || statusLower === 'ap') {
+  if (
+    statusLower === 'finished' ||
+    statusLower === 'ft' ||
+    statusLower === 'final' ||
+    statusLower === 'ap'
+  ) {
     return 'finished';
   }
   return 'pending';
@@ -133,7 +150,7 @@ export function calculatePoints(
   awayPredicted: number,
   homeActual: number,
   awayActual: number,
-  stage: MatchStage
+  stage: MatchStage,
 ): number {
   const isKnockout = stage !== 'group_stage';
   const multiplier = isKnockout ? 2 : 1;
@@ -161,16 +178,22 @@ export function calculatePoints(
   return 0;
 }
 
-export function canPredict(match: { status: string; home_score: number | null; away_score: number | null; match_datetime: string; stage: MatchStage }): boolean {
+export function canPredict(match: {
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
+  match_datetime: string;
+  stage: MatchStage;
+}): boolean {
   if (match.status === 'finished') return false;
   if (match.home_score !== null || match.away_score !== null) return false;
-  
+
   const now = new Date();
   const matchTime = new Date(match.match_datetime);
   const hoursDiff = (matchTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  
+
   const deadlineHours = match.stage === 'group_stage' ? 48 : 48;
-  
+
   return hoursDiff > deadlineHours;
 }
 
@@ -191,19 +214,19 @@ export function getTimeRemaining(match: { match_datetime: string }): string {
   if (hours > 0) {
     return `Cierra en ${hours}h`;
   }
-  
+
   const minutes = Math.floor(diff / (1000 * 60));
   return `Cierra en ${minutes}m`;
 }
 
 export function formatMatchDateTime(datetime: string): string {
   const date = new Date(datetime);
-  return date.toLocaleString('es-MX', {
+  return date.toLocaleString('es-CO', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: 'America/Mexico_City',
+    timeZone: 'America/Bogota',
   });
 }

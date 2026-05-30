@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserSession } from '@/lib/types';
-import { STAGES_ORDER, canPredict, getTimeRemaining, formatMatchDateTime } from '@/lib/api';
+import {
+  STAGES_ORDER,
+  canPredict,
+  getTimeRemaining,
+  formatMatchDateTime,
+} from '@/lib/api';
 
 interface MatchWithPrediction {
   id: string;
@@ -27,8 +32,8 @@ interface MatchWithPrediction {
 
 interface PendingPrediction {
   matchId: string;
-  homeScore: number;
-  awayScore: number;
+  homeScore: number | undefined;
+  awayScore: number | undefined;
 }
 
 export default function HomePage() {
@@ -36,7 +41,9 @@ export default function HomePage() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [matches, setMatches] = useState<MatchWithPrediction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pendingPredictions, setPendingPredictions] = useState<Map<string, PendingPrediction>>(new Map());
+  const [pendingPredictions, setPendingPredictions] = useState<
+    Map<string, PendingPrediction>
+  >(new Map());
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -48,12 +55,10 @@ export default function HomePage() {
     try {
       const res = await fetch('/api/session');
       const data = await res.json();
-      
       if (!res.ok || !data.session) {
         router.push('/login');
         return;
       }
-      
       setSession(data.session);
       loadMatches();
     } catch {
@@ -83,16 +88,16 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matchId,
-          homeScore: prediction.homeScore,
-          awayScore: prediction.awayScore,
+          homeScore: prediction.homeScore ?? 0,
+          awayScore: prediction.awayScore ?? 0,
         }),
       });
 
       if (res.ok) {
-        setSuccessMessage('¡Predicción guardada!');
+        setSuccessMessage('Prediccion guardada!');
         setTimeout(() => setSuccessMessage(''), 3000);
         loadMatches();
-        setPendingPredictions(prev => {
+        setPendingPredictions((prev) => {
           const next = new Map(prev);
           next.delete(matchId);
           return next;
@@ -113,16 +118,6 @@ export default function HomePage() {
     router.push('/login');
   }
 
-  function handleNavigateStandings() {
-    router.push('/standings');
-  }
-
-  function handleNavigateAdmin() {
-    if (session?.is_admin) {
-      router.push('/admin');
-    }
-  }
-
   if (!session || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -134,26 +129,37 @@ export default function HomePage() {
   const groupedMatches = STAGES_ORDER.map(({ stage, label }) => ({
     stage,
     label,
-    matches: matches.filter(m => m.stage === stage),
-  })).filter(group => group.matches.length > 0);
+    matches: matches.filter((m) => m.stage === stage),
+  })).filter((group) => group.matches.length > 0);
 
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-secondary">🏆 Polla Mundialista</h1>
+          <h1 className="text-2xl font-bold text-secondary">
+            Polla Mundialista
+          </h1>
           <p className="text-text-secondary">Hola, {session.name}!</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleNavigateStandings} className="btn-secondary">
+          <button
+            onClick={() => router.push('/standings')}
+            className="btn-secondary"
+          >
             Tabla
           </button>
           {session.is_admin && (
-            <button onClick={handleNavigateAdmin} className="btn-primary">
+            <button
+              onClick={() => router.push('/admin')}
+              className="btn-primary"
+            >
               Admin
             </button>
           )}
-          <button onClick={handleLogout} className="text-text-secondary hover:text-white">
+          <button
+            onClick={handleLogout}
+            className="text-text-secondary hover:text-white"
+          >
             Salir
           </button>
         </div>
@@ -164,7 +170,6 @@ export default function HomePage() {
           {successMessage}
         </div>
       )}
-
       {errorMessage && (
         <div className="bg-red-900/50 border border-red-500 text-red-400 px-4 py-3 rounded-lg text-center">
           {errorMessage}
@@ -175,19 +180,15 @@ export default function HomePage() {
         <div key={stage}>
           <h2 className="text-xl font-bold mb-4 text-secondary">{label}</h2>
           <div className="space-y-3">
-            {matches.map(match => (
+            {matches.map((match) => (
               <MatchCard
                 key={match.id}
                 match={match}
-                onPendingChange={(home, away) => {
-                  setPendingPredictions(prev => {
-                    const next = new Map(prev);
-                    next.set(match.id, { matchId: match.id, homeScore: home, awayScore: away });
-                    return next;
-                  });
-                }}
-                onPredict={() => handlePredict(match.id)}
-                pendingPrediction={pendingPredictions.get(match.id)}
+                onPredict={handlePredict}
+                reloadMatches={loadMatches}
+                pendingPredictions={pendingPredictions}
+                setPendingPredictions={setPendingPredictions}
+                setErrorMessage={setErrorMessage}
               />
             ))}
           </div>
@@ -196,8 +197,8 @@ export default function HomePage() {
 
       {groupedMatches.length === 0 && (
         <div className="text-center text-text-secondary py-12">
-          <p className="text-xl mb-4">No hay partidos disponibles todavía.</p>
-          <p>¡Pronto se agregarán los partidos del Mundial!</p>
+          <p className="text-xl mb-4">No hay partidos disponibles todavia.</p>
+          <p>Pronto se agregaran los partidos del Mundial!</p>
         </div>
       )}
     </div>
@@ -206,31 +207,117 @@ export default function HomePage() {
 
 function MatchCard({
   match,
-  onPendingChange,
   onPredict,
-  pendingPrediction,
-}: {
+  reloadMatches,
+  pendingPredictions,
+  setPendingPredictions,
+  setErrorMessage,
+}: Readonly<{
   match: MatchWithPrediction;
-  onPendingChange: (home: number, away: number) => void;
-  onPredict: () => void;
-  pendingPrediction?: PendingPrediction;
-}) {
+  onPredict: (matchId: string) => void;
+  reloadMatches: () => void;
+  pendingPredictions: Map<string, PendingPrediction>;
+  setPendingPredictions: React.Dispatch<
+    React.SetStateAction<Map<string, PendingPrediction>>
+  >;
+  setErrorMessage: (msg: string) => void;
+}>) {
   const matchOpen = canPredict(match as any);
   const hasExistingPrediction = !!match.user_prediction;
-  const canSubmit = pendingPrediction && !hasExistingPrediction;
+  const [editMode, setEditMode] = useState(false);
+  const [editHome, setEditHome] = useState('');
+  const [editAway, setEditAway] = useState('');
 
-  const homeScore = pendingPrediction?.homeScore ?? match.user_prediction?.home_score_predicted ?? 0;
-  const awayScore = pendingPrediction?.awayScore ?? match.user_prediction?.away_score_predicted ?? 0;
-
-  const points = match.user_prediction?.points_earned;
+  const pending = pendingPredictions.get(match.id);
   const isFinished = match.status === 'finished';
+  const points = match.user_prediction?.points_earned;
+
+  function updatePending(home: number | undefined, away: number | undefined) {
+    setPendingPredictions((prev) => {
+      const next = new Map(prev);
+      next.set(match.id, {
+        matchId: match.id,
+        homeScore: home,
+        awayScore: away,
+      });
+      return next;
+    });
+  }
+
+  function handleHomeChange(val: string) {
+    const cleaned = val.replace(/\D/g, '');
+    updatePending(
+      cleaned === '' ? undefined : Number(cleaned),
+      pending?.awayScore,
+    );
+  }
+
+  function handleAwayChange(val: string) {
+    const cleaned = val.replace(/\D/g, '');
+    updatePending(
+      pending?.homeScore,
+      cleaned === '' ? undefined : Number(cleaned),
+    );
+  }
+
+  function enterEditMode() {
+    setEditHome(match.user_prediction!.home_score_predicted.toString());
+    setEditAway(match.user_prediction!.away_score_predicted.toString());
+    setEditMode(true);
+  }
+
+  async function handleEditSave() {
+    const h = editHome === '' ? 0 : Number(editHome);
+    const a = editAway === '' ? 0 : Number(editAway);
+    try {
+      const res = await fetch('/api/predictions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: match.id, homeScore: h, awayScore: a }),
+      });
+      if (res.ok) {
+        setEditMode(false);
+        reloadMatches();
+      } else {
+        const data = await res.json();
+        setErrorMessage(data.error || 'Error al guardar');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch {
+      setErrorMessage('Error al conectar');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  }
+
+  function handleSubmit() {
+    const h = pending?.homeScore ?? 0;
+    const a = pending?.awayScore ?? 0;
+    updatePending(h, a);
+    onPredict(match.id);
+  }
+
+  const showInput = !isFinished && matchOpen;
+  const homeDisplay = editMode
+    ? editHome
+    : pending?.homeScore != null
+      ? String(pending.homeScore)
+      : '';
+  const awayDisplay = editMode
+    ? editAway
+    : pending?.awayScore != null
+      ? String(pending.awayScore)
+      : '';
+  const canSubmit =
+    pending != null && pending.homeScore != null && pending.awayScore != null;
 
   return (
-    <div className={`card ${isFinished && points != null && points > 0 ? 'border-green-500' : ''}`}>
+    <div
+      className={`card ${isFinished && points != null && points > 0 ? 'border-green-500' : ''}`}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-text-secondary">
           {formatMatchDateTime(match.match_datetime)}
-          {match.venue && ` • ${match.venue}`}
+          {match.venue && ` - ${match.venue}`}
         </div>
         <div className="text-sm font-medium text-secondary">
           {matchOpen ? getTimeRemaining(match as any) : 'Cerrado'}
@@ -249,15 +336,20 @@ function MatchCard({
             </div>
           ) : (
             <input
+              key={`home-${match.id}`}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={1}
-              value={homeScore || ''}
-              onChange={e => onPendingChange(Number(e.target.value.replace(/\D/g,'').slice(-1)), awayScore)}
-              disabled={!matchOpen && !hasExistingPrediction}
+              value={homeDisplay}
+              onChange={(e) =>
+                editMode
+                  ? setEditHome(e.target.value.replace(/\D/g, ''))
+                  : handleHomeChange(e.target.value)
+              }
+              disabled={!showInput && !editMode}
               className="input w-8 text-center text-xl p-0"
-              placeholder="-"
+              placeholder=""
             />
           )}
           <span className="text-text-secondary">-</span>
@@ -267,15 +359,20 @@ function MatchCard({
             </div>
           ) : (
             <input
+              key={`away-${match.id}`}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={1}
-              value={awayScore || ''}
-              onChange={e => onPendingChange(homeScore, Number(e.target.value.replace(/\D/g,'').slice(-1)))}
-              disabled={!matchOpen && !hasExistingPrediction}
+              value={awayDisplay}
+              onChange={(e) =>
+                editMode
+                  ? setEditAway(e.target.value.replace(/\D/g, ''))
+                  : handleAwayChange(e.target.value)
+              }
+              disabled={!showInput && !editMode}
               className="input w-8 text-center text-xl p-0"
-              placeholder="-"
+              placeholder=""
             />
           )}
         </div>
@@ -285,33 +382,72 @@ function MatchCard({
         </div>
       </div>
 
-      {matchOpen && !hasExistingPrediction && (
+      {showInput && !hasExistingPrediction && (
         <div className="mt-4 flex justify-end">
-          <button onClick={onPredict} disabled={!canSubmit} className="btn-primary disabled:opacity-50">
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className="btn-primary disabled:opacity-50"
+          >
             Predecir
           </button>
         </div>
       )}
 
-      {hasExistingPrediction && !isFinished && (
-        <div className="mt-3 text-sm text-text-secondary">
-          Tu pronostico: {match.user_prediction!.home_score_predicted} - {match.user_prediction!.away_score_predicted}
+      {hasExistingPrediction && !isFinished && !editMode && (
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-sm text-text-secondary">
+            Tu pronostico:{' '}
+            <span className="font-bold text-white">
+              {match.user_prediction!.home_score_predicted} -{' '}
+              {match.user_prediction!.away_score_predicted}
+            </span>
+          </div>
+          <button
+            onClick={enterEditMode}
+            className="btn-secondary text-sm py-1 px-3"
+          >
+            Editar
+          </button>
+        </div>
+      )}
+
+      {hasExistingPrediction && !isFinished && editMode && (
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <button
+            onClick={handleEditSave}
+            className="btn-primary text-sm py-1 px-3"
+          >
+            Guardar
+          </button>
+          <button
+            onClick={() => setEditMode(false)}
+            className="btn-secondary text-sm py-1 px-3"
+          >
+            Cancelar
+          </button>
         </div>
       )}
 
       {points != null && isFinished && (
         <div className="mt-3 flex items-center gap-2">
           <span className="text-text-secondary">Puntos:</span>
-          <span className={`font-bold ${points > 0 ? 'text-green-400' : 'text-text-secondary'}`}>
+          <span
+            className={`font-bold ${points > 0 ? 'text-green-400' : 'text-text-secondary'}`}
+          >
             {points}
           </span>
-          {points >= 5 && <span className="text-green-400">✓ Score exacto!</span>}
-          {points >= 3 && points < 5 && <span className="text-yellow-400">✓ Ganador/draw correcto</span>}
+          {points >= 5 && <span className="text-green-400">Score exacto!</span>}
+          {points >= 3 && points < 5 && (
+            <span className="text-yellow-400">Ganador/draw correcto</span>
+          )}
         </div>
       )}
 
       {match.group_name && (
-        <div className="mt-2 text-xs text-text-secondary">{match.group_name}</div>
+        <div className="mt-2 text-xs text-text-secondary">
+          {match.group_name}
+        </div>
       )}
     </div>
   );

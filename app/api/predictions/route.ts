@@ -25,11 +25,13 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabaseAdmin
       .from('predictions')
-      .insert({
+      .upsert({
         user_id: session.id,
         match_id: matchId,
         home_score_predicted: homeScore,
         away_score_predicted: awayScore,
+      }, {
+        onConflict: 'user_id,match_id'
       });
 
     if (error) {
