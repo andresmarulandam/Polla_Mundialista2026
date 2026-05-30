@@ -38,10 +38,21 @@ export default function AdminPage() {
   const [editAway, setEditAway] = useState('');
   const [editHomeTeam, setEditHomeTeam] = useState('');
   const [editAwayTeam, setEditAwayTeam] = useState('');
-  const [activeTab, setActiveTab] = useState<'matches' | 'users' | 'special'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'users' | 'special'>(
+    'matches',
+  );
   const [champion, setChampion] = useState('');
   const [topScorer, setTopScorer] = useState('');
-  const [specialBets, setSpecialBets] = useState<Array<{ user_id: string; champion: string | null; top_scorer: string | null; user_name?: string; is_champion_correct?: boolean; is_scorer_correct?: boolean }>>([]);
+  const [specialBets, setSpecialBets] = useState<
+    Array<{
+      user_id: string;
+      champion: string | null;
+      top_scorer: string | null;
+      user_name?: string;
+      is_champion_correct?: boolean;
+      is_scorer_correct?: boolean;
+    }>
+  >([]);
 
   useEffect(() => {
     checkSession();
@@ -143,14 +154,16 @@ export default function AdminPage() {
   const groupedMatches = STAGES_ORDER.map(({ stage, label }) => ({
     stage,
     label,
-    matches: matches.filter(m => m.stage === stage),
-  })).filter(group => group.matches.length > 0);
+    matches: matches.filter((m) => m.stage === stage),
+  })).filter((group) => group.matches.length > 0);
 
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-secondary">Panel de Admin</h1>
-        <button onClick={() => router.push('/')} className="btn-secondary">Volver</button>
+        <button onClick={() => router.push('/')} className="btn-secondary">
+          Volver
+        </button>
       </header>
 
       {message && (
@@ -176,7 +189,7 @@ export default function AdminPage() {
           onClick={() => setActiveTab('special')}
           className={activeTab === 'special' ? 'btn-primary' : 'btn-secondary'}
         >
-          Apuestas Esp.
+          Predicciones especiales
         </button>
       </div>
 
@@ -184,7 +197,9 @@ export default function AdminPage() {
         <div className="space-y-6">
           {groupedMatches.map(({ stage, label, matches: stageMatches }) => (
             <div key={stage} className="card">
-              <h2 className="text-lg font-bold mb-4 text-secondary">{label} ({stageMatches.length})</h2>
+              <h2 className="text-lg font-bold mb-4 text-secondary">
+                {label} ({stageMatches.length})
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -200,23 +215,37 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {stageMatches.map(match => (
-                      <tr key={match.id} className={`border-b border-gray-800 ${match.status === 'finished' ? 'bg-green-900/10' : ''}`}>
+                    {stageMatches.map((match) => (
+                      <tr
+                        key={match.id}
+                        className={`border-b border-gray-800 ${match.status === 'finished' ? 'bg-green-900/10' : ''}`}
+                      >
                         <td className="px-2 py-2 whitespace-nowrap">
-                          {new Date(match.match_datetime).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}
+                          {new Date(match.match_datetime).toLocaleDateString(
+                            'es-CO',
+                            { month: 'short', day: 'numeric' },
+                          )}
                         </td>
-                        <td className="px-2 py-2 text-xs">{match.group_name || '-'}</td>
+                        <td className="px-2 py-2 text-xs">
+                          {match.group_name || '-'}
+                        </td>
                         <td className="px-2 py-2 text-xs">{match.venue}</td>
                         <td className="px-2 py-2 font-medium text-right">
                           {editingMatch === match.id ? (
                             <input
                               value={editHomeTeam}
-                              onChange={e => setEditHomeTeam(e.target.value)}
+                              onChange={(e) => setEditHomeTeam(e.target.value)}
                               className="w-24 text-right text-sm bg-gray-800 border border-gray-500 rounded px-2 py-1 text-white focus:border-primary focus:outline-none"
                               placeholder="Equipo"
                             />
                           ) : (
-                            <span className={match.country ? '' : 'text-text-secondary italic'}>
+                            <span
+                              className={
+                                match.country
+                                  ? ''
+                                  : 'text-text-secondary italic'
+                              }
+                            >
                               {match.home_team}
                             </span>
                           )}
@@ -226,7 +255,13 @@ export default function AdminPage() {
                             <div className="flex items-center gap-1 justify-center">
                               <input
                                 value={editHome}
-                                onChange={e => setEditHome(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                                onChange={(e) =>
+                                  setEditHome(
+                                    e.target.value
+                                      .replace(/\D/g, '')
+                                      .slice(0, 2),
+                                  )
+                                }
                                 className="w-10 text-center text-sm bg-gray-800 border border-gray-500 rounded px-1 py-1 text-white focus:border-primary focus:outline-none"
                                 maxLength={2}
                                 placeholder="-"
@@ -234,7 +269,13 @@ export default function AdminPage() {
                               <span className="text-text-secondary">-</span>
                               <input
                                 value={editAway}
-                                onChange={e => setEditAway(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                                onChange={(e) =>
+                                  setEditAway(
+                                    e.target.value
+                                      .replace(/\D/g, '')
+                                      .slice(0, 2),
+                                  )
+                                }
                                 className="w-10 text-center text-sm bg-gray-800 border border-gray-500 rounded px-1 py-1 text-white focus:border-primary focus:outline-none"
                                 maxLength={2}
                                 placeholder="-"
@@ -242,7 +283,9 @@ export default function AdminPage() {
                             </div>
                           ) : (
                             <span>
-                              {match.home_score != null ? `${match.home_score} - ${match.away_score}` : '-'}
+                              {match.home_score != null
+                                ? `${match.home_score} - ${match.away_score}`
+                                : '-'}
                             </span>
                           )}
                         </td>
@@ -250,33 +293,52 @@ export default function AdminPage() {
                           {editingMatch === match.id ? (
                             <input
                               value={editAwayTeam}
-                              onChange={e => setEditAwayTeam(e.target.value)}
+                              onChange={(e) => setEditAwayTeam(e.target.value)}
                               className="w-24 text-sm bg-gray-800 border border-gray-500 rounded px-2 py-1 text-white focus:border-primary focus:outline-none"
                               placeholder="Equipo"
                             />
                           ) : (
-                            <span className={match.country ? '' : 'text-text-secondary italic'}>
+                            <span
+                              className={
+                                match.country
+                                  ? ''
+                                  : 'text-text-secondary italic'
+                              }
+                            >
                               {match.away_team}
                             </span>
                           )}
                         </td>
                         <td className="px-2 py-2 text-center">
-                          <span className={`text-xs px-2 py-1 rounded ${match.status === 'finished' ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-text-secondary'}`}>
-                            {match.status === 'finished' ? 'Finalizado' : 'Pendiente'}
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${match.status === 'finished' ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-text-secondary'}`}
+                          >
+                            {match.status === 'finished'
+                              ? 'Finalizado'
+                              : 'Pendiente'}
                           </span>
                         </td>
                         <td className="px-2 py-2 text-center">
                           {editingMatch === match.id ? (
                             <div className="flex gap-1 justify-center">
-                              <button onClick={() => saveMatch(match.id)} className="btn-primary text-xs py-1 px-2">
+                              <button
+                                onClick={() => saveMatch(match.id)}
+                                className="btn-primary text-xs py-1 px-2"
+                              >
                                 Guardar
                               </button>
-                              <button onClick={() => setEditingMatch(null)} className="btn-secondary text-xs py-1 px-2">
+                              <button
+                                onClick={() => setEditingMatch(null)}
+                                className="btn-secondary text-xs py-1 px-2"
+                              >
                                 Cancelar
                               </button>
                             </div>
                           ) : (
-                            <button onClick={() => startEdit(match)} className="btn-secondary text-xs py-1 px-2">
+                            <button
+                              onClick={() => startEdit(match)}
+                              className="btn-secondary text-xs py-1 px-2"
+                            >
                               Editar
                             </button>
                           )}
@@ -308,7 +370,9 @@ export default function AdminPage() {
                 {users.map((user) => (
                   <tr key={user.id} className="border-t border-gray-800">
                     <td className="px-4 py-3 font-medium">{user.name}</td>
-                    <td className="px-4 py-3 text-center">{user.is_admin ? 'Si' : 'No'}</td>
+                    <td className="px-4 py-3 text-center">
+                      {user.is_admin ? 'Si' : 'No'}
+                    </td>
                     <td className="px-4 py-3 text-text-secondary text-sm">
                       {new Date(user.created_at).toLocaleDateString('es-CO')}
                     </td>
@@ -334,26 +398,31 @@ export default function AdminPage() {
           <div className="card">
             <h2 className="text-xl font-bold mb-4">Resultados Reales</h2>
             <p className="text-sm text-text-secondary mb-4">
-              Coloca el campeon y goleador reales. Cada usuario que acierte recibira 50 puntos.
+              Coloca el campeon y goleador reales. Cada usuario que acierte
+              recibira 50 puntos.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Campeon real</label>
+                <label className="block text-sm font-medium mb-1">
+                  Campeon real
+                </label>
                 <input
                   type="text"
                   value={champion}
-                  onChange={e => setChampion(e.target.value)}
+                  onChange={(e) => setChampion(e.target.value)}
                   className="input w-full text-sm"
                   placeholder="Pais campeon..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Goleador real</label>
+                <label className="block text-sm font-medium mb-1">
+                  Goleador real
+                </label>
                 <input
                   type="text"
                   value={topScorer}
-                  onChange={e => setTopScorer(e.target.value)}
+                  onChange={(e) => setTopScorer(e.target.value)}
                   className="input w-full text-sm"
                   placeholder="Nombre del goleador..."
                 />
@@ -384,9 +453,13 @@ export default function AdminPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-xl font-bold mb-4">Predicciones de Usuarios ({specialBets.length})</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Predicciones de Usuarios ({specialBets.length})
+            </h2>
             {specialBets.length === 0 ? (
-              <p className="text-text-secondary">Ningun usuario ha hecho predicciones especiales aun.</p>
+              <p className="text-text-secondary">
+                Ningun usuario ha hecho predicciones especiales aun.
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -399,16 +472,33 @@ export default function AdminPage() {
                   </thead>
                   <tbody>
                     {specialBets.map((bet) => (
-                      <tr key={bet.user_id} className="border-b border-gray-800">
-                        <td className="px-3 py-2 font-medium">{bet.user_name}</td>
+                      <tr
+                        key={bet.user_id}
+                        className="border-b border-gray-800"
+                      >
+                        <td className="px-3 py-2 font-medium">
+                          {bet.user_name}
+                        </td>
                         <td className="px-3 py-2">
-                          <span className={bet.is_champion_correct ? 'text-green-400 font-bold' : ''}>
+                          <span
+                            className={
+                              bet.is_champion_correct
+                                ? 'text-green-400 font-bold'
+                                : ''
+                            }
+                          >
                             {bet.champion || '-'}
                           </span>
                           {bet.is_champion_correct && ' ✓'}
                         </td>
                         <td className="px-3 py-2">
-                          <span className={bet.is_scorer_correct ? 'text-green-400 font-bold' : ''}>
+                          <span
+                            className={
+                              bet.is_scorer_correct
+                                ? 'text-green-400 font-bold'
+                                : ''
+                            }
+                          >
                             {bet.top_scorer || '-'}
                           </span>
                           {bet.is_scorer_correct && ' ✓'}
