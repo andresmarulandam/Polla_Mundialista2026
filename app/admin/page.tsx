@@ -38,7 +38,10 @@ export default function AdminPage() {
   const [editAway, setEditAway] = useState('');
   const [editHomeTeam, setEditHomeTeam] = useState('');
   const [editAwayTeam, setEditAwayTeam] = useState('');
-  const [activeTab, setActiveTab] = useState<'matches' | 'users'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'users' | 'special'>('matches');
+  const [champion, setChampion] = useState('');
+  const [topScorer, setTopScorer] = useState('');
+  const [specialBets, setSpecialBets] = useState<Array<{ user_id: string; champion: string | null; top_scorer: string | null; user_name?: string; is_champion_correct?: boolean; is_scorer_correct?: boolean }>>([]);
 
   useEffect(() => {
     checkSession();
@@ -61,14 +64,20 @@ export default function AdminPage() {
 
   async function loadData() {
     try {
-      const [usersRes, matchesRes] = await Promise.all([
+      const [usersRes, matchesRes, betsRes] = await Promise.all([
         fetch('/api/admin/users'),
         fetch('/api/admin/matches'),
+        fetch('/api/admin/special-bets'),
       ]);
       const usersData = await usersRes.json();
       const matchesData = await matchesRes.json();
       setUsers(usersData.users || []);
       setMatches(matchesData.matches || []);
+
+      const betsData = await betsRes.json();
+      setSpecialBets(betsData.bets || []);
+      if (betsData.actualChampion) setChampion(betsData.actualChampion);
+      if (betsData.actualTopScorer) setTopScorer(betsData.actualTopScorer);
     } catch (err) {
       console.error('Error loading data:', err);
     } finally {
@@ -162,6 +171,12 @@ export default function AdminPage() {
           className={activeTab === 'users' ? 'btn-primary' : 'btn-secondary'}
         >
           Usuarios ({users.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('special')}
+          className={activeTab === 'special' ? 'btn-primary' : 'btn-secondary'}
+        >
+          Apuestas Esp.
         </button>
       </div>
 
@@ -310,6 +325,100 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'special' && (
+        <div className="space-y-6">
+          <div className="card">
+            <h2 className="text-xl font-bold mb-4">Resultados Reales</h2>
+            <p className="text-sm text-text-secondary mb-4">
+              Coloca el campeon y goleador reales. Cada usuario que acierte recibira 50 puntos.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Campeon real</label>
+                <input
+                  type="text"
+                  value={champion}
+                  onChange={e => setChampion(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="Pais campeon..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Goleador real</label>
+                <input
+                  type="text"
+                  value={topScorer}
+                  onChange={e => setTopScorer(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="Nombre del goleador..."
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/admin/tournament-settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ champion, topScorer: topScorer }),
+                  });
+                  if (res.ok) {
+                    setMessage('Resultados especiales guardados');
+                    setTimeout(() => setMessage(''), 2000);
+                    loadData();
+                  }
+                } catch {
+                  setMessage('Error al guardar');
+                }
+              }}
+              className="btn-primary"
+            >
+              Guardar resultados reales
+            </button>
+          </div>
+
+          <div className="card">
+            <h2 className="text-xl font-bold mb-4">Predicciones de Usuarios ({specialBets.length})</h2>
+            {specialBets.length === 0 ? (
+              <p className="text-text-secondary">Ningun usuario ha hecho predicciones especiales aun.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-text-secondary border-b border-gray-700">
+                      <th className="px-3 py-2 text-left">Usuario</th>
+                      <th className="px-3 py-2 text-left">Campeon</th>
+                      <th className="px-3 py-2 text-left">Goleador</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {specialBets.map((bet) => (
+                      <tr key={bet.user_id} className="border-b border-gray-800">
+                        <td className="px-3 py-2 font-medium">{bet.user_name}</td>
+                        <td className="px-3 py-2">
+                          <span className={bet.is_champion_correct ? 'text-green-400 font-bold' : ''}>
+                            {bet.champion || '-'}
+                          </span>
+                          {bet.is_champion_correct && ' ✓'}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className={bet.is_scorer_correct ? 'text-green-400 font-bold' : ''}>
+                            {bet.top_scorer || '-'}
+                          </span>
+                          {bet.is_scorer_correct && ' ✓'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

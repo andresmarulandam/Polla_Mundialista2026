@@ -79,7 +79,7 @@ export default function StandingsPage() {
               <th className="px-4 py-3 text-center">#</th>
               <th className="px-4 py-3 text-left">Nombre</th>
               <th className="px-4 py-3 text-center">Puntos</th>
-              <th className="px-4 py-3 text-center">Exactos</th>
+              <th className="px-4 py-3 text-center">Marcadores exactos acertados</th>
             </tr>
           </thead>
           <tbody>

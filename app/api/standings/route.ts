@@ -25,12 +25,34 @@ export async function GET(request: NextRequest) {
     .from('matches')
     .select('*');
 
+  const { data: specialBets } = await supabaseAdmin
+    .from('special_bets')
+    .select('*');
+
+  const { data: settings } = await supabaseAdmin
+    .from('tournament_settings')
+    .select('*');
+
   if (!predictions || !matches) {
     return NextResponse.json({ standings: [] });
   }
 
+  // Build settings map
+  const settingsMap: Record<string, string | null> = {};
+  settings?.forEach((s) => { settingsMap[s.setting_key] = s.setting_value; });
+
+  const actualChampion = settingsMap['champion'] || null;
+  const actualTopScorer = settingsMap['top_scorer'] || null;
+
+  // Build special bets map
+  const specialBetsMap = new Map<string, { champion: string | null; top_scorer: string | null }>();
+  specialBets?.forEach((sb) => {
+    specialBetsMap.set(sb.user_id, { champion: sb.champion, top_scorer: sb.top_scorer });
+  });
+
   const userStats = new Map<string, { totalPoints: number; exactCount: number }>();
 
+  // Calculate match points
   predictions.forEach((pred) => {
     const match = matches.find(m => m.id === pred.match_id);
     if (!match) return;
@@ -53,6 +75,20 @@ export async function GET(request: NextRequest) {
       totalPoints: existing.totalPoints + points,
       exactCount: existing.exactCount + (isExact ? 1 : 0),
     });
+  });
+
+  // Add special bet points (50 each)
+  specialBets?.forEach((sb) => {
+    const existing = userStats.get(sb.user_id) || { totalPoints: 0, exactCount: 0 };
+    let bonus = 0;
+    if (actualChampion && sb.champion === actualChampion) bonus += 50;
+    if (actualTopScorer && sb.top_scorer === actualTopScorer) bonus += 50;
+    if (bonus > 0) {
+      userStats.set(sb.user_id, {
+        totalPoints: existing.totalPoints + bonus,
+        exactCount: existing.exactCount,
+      });
+    }
   });
 
   const { data: users } = await supabaseAdmin

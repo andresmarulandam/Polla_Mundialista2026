@@ -72,3 +72,18 @@ export interface UserSession {
   name: string;
   is_admin: boolean;
 }
+
+export interface SpecialBet {
+  id: string;
+  user_id: string;
+  champion: string | null;
+  top_scorer: string | null;
+  created_at: string;
+}
+
+export interface TournamentSetting {
+  id: string;
+  setting_key: string;
+  setting_value: string | null;
+  updated_at: string;
+}

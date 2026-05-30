@@ -46,6 +46,23 @@ CREATE TABLE admin_sync_log (
   matches_updated INTEGER DEFAULT 0
 );
 
+-- Tabla: special_bets (campeon y goleador)
+CREATE TABLE special_bets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) UNIQUE,
+  champion TEXT,
+  top_scorer TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabla: tournament_settings (valores reales puestos por admin)
+CREATE TABLE tournament_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  setting_key TEXT UNIQUE NOT NULL,
+  setting_value TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Índice para búsquedas rápidas
 CREATE INDEX idx_matches_datetime ON matches(match_datetime);
 CREATE INDEX idx_matches_stage ON matches(stage);
@@ -62,3 +79,7 @@ CREATE INDEX idx_predictions_match ON predictions(match_id);
 -- GRANT ALL ON matches TO authenticated;
 -- GRANT ALL ON predictions TO authenticated;
 -- GRANT ALL ON admin_sync_log TO authenticated;
+
+-- Deshabilitar RLS en tablas nuevas (service_role bypass RLS)
+ALTER TABLE special_bets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tournament_settings DISABLE ROW LEVEL SECURITY;

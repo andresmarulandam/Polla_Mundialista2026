@@ -17,6 +17,26 @@ const COUNTRY_FLAGS: Record<string, string> = {
   Canada: '\u{1F1E8}\u{1F1E6}',
 };
 
+const ALL_TEAMS = [
+  'Alemania', 'Argelia', 'Arabia Saudita', 'Argentina', 'Australia', 'Austria',
+  'Belgica', 'Bosnia y Herzegovina', 'Brasil',
+  'Cabo Verde', 'Canada', 'Colombia', 'Costa de Marfil', 'Croacia', 'Curazao',
+  'Corea del Sur', 'Ecuador', 'Egipto', 'Escocia', 'Espana', 'Estados Unidos',
+  'Francia',
+  'Ghana',
+  'Haiti',
+  'Inglaterra', 'Iran', 'Irak',
+  'Japon', 'Jordania',
+  'Marruecos', 'Mexico',
+  'Nueva Zelanda', 'Noruega',
+  'Paises Bajos', 'Panama', 'Paraguay', 'Portugal',
+  'Qatar',
+  'RD Congo', 'Republica Checa',
+  'Senegal', 'Sudafrica', 'Suecia', 'Suiza',
+  'Tunez', 'Turquia',
+  'Uruguay', 'Uzbekistan',
+];
+
 interface MatchWithPrediction {
   id: string;
   api_id: string | null;
@@ -54,6 +74,11 @@ export default function HomePage() {
   >(new Map());
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [specialBetChampion, setSpecialBetChampion] = useState('');
+  const [specialBetScorer, setSpecialBetScorer] = useState('');
+  const [savedSpecialBet, setSavedSpecialBet] = useState<{ champion: string | null; top_scorer: string | null } | null>(null);
+
+  const tournamentStarted = new Date('2026-06-11T19:00:00Z') <= new Date();
 
   useEffect(() => {
     checkSession();
@@ -69,6 +94,7 @@ export default function HomePage() {
       }
       setSession(data.session);
       loadMatches();
+      loadSpecialBet();
     } catch {
       router.push('/login');
     }
@@ -83,6 +109,49 @@ export default function HomePage() {
       console.error('Error loading matches:', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadSpecialBet() {
+    try {
+      const res = await fetch('/api/special-bets');
+      const data = await res.json();
+      if (data.specialBet) {
+        setSavedSpecialBet(data.specialBet);
+        setSpecialBetChampion(data.specialBet.champion || '');
+        setSpecialBetScorer(data.specialBet.top_scorer || '');
+      }
+    } catch (err) {
+      console.error('Error loading special bet:', err);
+    }
+  }
+
+  async function handleSaveSpecialBet() {
+    if (!specialBetChampion || !specialBetScorer) {
+      setErrorMessage('Debes seleccionar campeon y goleador');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/special-bets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ champion: specialBetChampion, topScorer: specialBetScorer }),
+      });
+
+      if (res.ok) {
+        setSuccessMessage('Apuestas especiales guardadas!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+        setSavedSpecialBet({ champion: specialBetChampion, top_scorer: specialBetScorer });
+      } else {
+        const data = await res.json();
+        setErrorMessage(data.error || 'Error al guardar');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch {
+      setErrorMessage('Error al conectar');
+      setTimeout(() => setErrorMessage(''), 3000);
     }
   }
 
@@ -183,6 +252,63 @@ export default function HomePage() {
           {errorMessage}
         </div>
       )}
+
+      <div className="card">
+        <h2 className="text-lg font-bold mb-3 text-secondary">Predicciones Especiales (50 pts c/u)</h2>
+        {savedSpecialBet && !tournamentStarted ? (
+          <p className="text-sm text-text-secondary mb-3">
+            Ya hiciste tus predicciones especiales. Puedes modificarlas antes de que empiece el Mundial.
+          </p>
+        ) : savedSpecialBet && tournamentStarted ? (
+          <p className="text-sm text-text-secondary mb-3">
+            Las predicciones estan cerradas. El Mundial ya empezo.
+          </p>
+        ) : null}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Campeon</label>
+            <select
+              value={specialBetChampion}
+              onChange={e => setSpecialBetChampion(e.target.value)}
+              disabled={tournamentStarted}
+              className="input w-full text-sm"
+            >
+              <option value="">Seleccionar pais...</option>
+              {ALL_TEAMS.map(team => (
+                <option key={team} value={team}>{team}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Goleador</label>
+            <input
+              type="text"
+              value={specialBetScorer}
+              onChange={e => setSpecialBetScorer(e.target.value)}
+              disabled={tournamentStarted}
+              className="input w-full text-sm"
+              placeholder="Nombre del jugador..."
+            />
+          </div>
+        </div>
+
+        {!tournamentStarted && (
+          <div className="mt-3 flex justify-end">
+            <button onClick={handleSaveSpecialBet} className="btn-primary text-sm">
+              Guardar predicciones especiales
+            </button>
+          </div>
+        )}
+
+        {savedSpecialBet && (
+          <div className="mt-3 text-sm text-text-secondary">
+            Tu seleccion: <span className="font-bold text-white">
+              {savedSpecialBet.champion || '-'} / {savedSpecialBet.top_scorer || '-'}
+            </span>
+          </div>
+        )}
+      </div>
 
       {groupedMatches.map(({ stage, label, matches }) => (
         <div key={stage}>
