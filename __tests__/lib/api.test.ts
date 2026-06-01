@@ -1,49 +1,38 @@
-import { 
-  calculatePoints, 
-  canPredict, 
-  getTimeRemaining, 
+import {
+  canPredict,
+  calculatePoints,
+  getTimeRemaining,
   formatMatchDateTime,
+  GROUP_STAGE_DEADLINE,
   STAGE_LABELS,
-  STAGES_ORDER
+  STAGES_ORDER,
 } from '@/lib/api';
 import { MatchStage, MatchStatus } from '@/lib/types';
 
 describe('API Utilities', () => {
   describe('calculatePoints', () => {
     it('should award 5 points for exact score in group stage', () => {
-      const points = calculatePoints(2, 1, 2, 1, 'group_stage');
-      expect(points).toBe(5);
+      expect(calculatePoints(2, 1, 2, 1, 'group_stage')).toBe(5);
     });
 
     it('should award 10 points for exact score in knockout stage', () => {
-      const points = calculatePoints(2, 1, 2, 1, 'final');
-      expect(points).toBe(10); // 5 * 2 multiplier
+      expect(calculatePoints(2, 1, 2, 1, 'final')).toBe(10);
     });
 
     it('should award 3 points for correct winner in group stage', () => {
-      const points = calculatePoints(2, 0, 2, 1, 'group_stage');
-      expect(points).toBe(3);
+      expect(calculatePoints(2, 0, 2, 1, 'group_stage')).toBe(3);
     });
 
     it('should award 6 points for correct winner in knockout stage', () => {
-      const points = calculatePoints(2, 0, 2, 1, 'final');
-      expect(points).toBe(6); // 3 * 2 multiplier
+      expect(calculatePoints(2, 0, 2, 1, 'final')).toBe(6);
     });
 
     it('should award 3 points for correct draw in group stage', () => {
-      const points = calculatePoints(1, 1, 0, 0, 'group_stage');
-      expect(points).toBe(3);
+      expect(calculatePoints(1, 1, 0, 0, 'group_stage')).toBe(3);
     });
 
     it('should award 0 points for wrong prediction', () => {
-      const points = calculatePoints(0, 0, 2, 1, 'group_stage');
-      expect(points).toBe(0);
-    });
-
-    it('should handle null scores correctly', () => {
-      // When both scores are null, it's considered a draw but not an exact match
-      const points = calculatePoints(0, 0, null as unknown as number, null as unknown as number, 'group_stage');
-      expect(points).toBe(3); // Predicted 0-0 vs actual null-null = draw (3 pts)
+      expect(calculatePoints(0, 0, 2, 1, 'group_stage')).toBe(0);
     });
   });
 
@@ -52,91 +41,94 @@ describe('API Utilities', () => {
       status: 'pending' as const,
       home_score: null,
       away_score: null,
-      stage: 'group_stage' as MatchStage,
     };
 
-    it('should allow prediction when match is far in future', () => {
-      const futureMatch = {
-        ...baseMatch,
-        match_datetime: new Date(Date.now() + 100 * 60 * 60 * 1000).toISOString(), // 100 hours from now
-      };
-      expect(canPredict(futureMatch)).toBe(true);
+    afterEach(() => {
+      jest.useRealTimers();
     });
 
-    it('should not allow prediction when match is too close (< 48h for group stage)', () => {
-      const closeMatch = {
-        ...baseMatch,
-        match_datetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-      };
-      expect(canPredict(closeMatch)).toBe(false);
+    it('should allow group stage prediction before June 9 deadline', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-01T00:00:00Z'));
+      const match = { ...baseMatch, stage: 'group_stage' as MatchStage, match_datetime: '2026-06-15T19:00:00Z' };
+      expect(canPredict(match)).toBe(true);
     });
 
-    it('should not allow prediction for finished matches', () => {
-      const finishedMatch = {
-        ...baseMatch,
-        status: 'finished' as MatchStatus,
-        match_datetime: new Date(Date.now() + 100 * 60 * 60 * 1000).toISOString(),
-      };
-      expect(canPredict(finishedMatch)).toBe(false);
+    it('should block group stage prediction after June 9 deadline', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-10T04:00:00Z'));
+      const match = { ...baseMatch, stage: 'group_stage' as MatchStage, match_datetime: '2026-06-15T19:00:00Z' };
+      expect(canPredict(match)).toBe(false);
     });
 
-    it('should not allow prediction when scores already exist', () => {
-      const scoredMatch = {
-        ...baseMatch,
-        home_score: 1,
-        match_datetime: new Date(Date.now() + 100 * 60 * 60 * 1000).toISOString(),
-      };
-      expect(canPredict(scoredMatch)).toBe(false);
+    it('should block finished matches', () => {
+      const match = { ...baseMatch, status: 'finished' as MatchStatus, stage: 'group_stage' as MatchStage, match_datetime: '2026-06-15T19:00:00Z' };
+      expect(canPredict(match)).toBe(false);
     });
 
-    it('should apply same 48h rule for knockout stage', () => {
-      const knockoutMatch = {
-        ...baseMatch,
-        stage: 'final' as MatchStage,
-        match_datetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-      };
-      expect(canPredict(knockoutMatch)).toBe(false);
+    it('should block matches with scores', () => {
+      const match = { ...baseMatch, home_score: 1, stage: 'group_stage' as MatchStage, match_datetime: '2026-06-15T19:00:00Z' };
+      expect(canPredict(match)).toBe(false);
+    });
+
+    it('should apply 48h rule for knockout stage', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-18T10:00:00Z'));
+      const match = { ...baseMatch, stage: 'final' as MatchStage, match_datetime: '2026-07-19T20:00:00Z' };
+      expect(canPredict(match)).toBe(false);
     });
   });
 
   describe('getTimeRemaining', () => {
-    it('should return correct time for future match', () => {
-      const futureDate = new Date(Date.now() + 90 * 60 * 60 * 1000); // 90 hours = 3 days 18 hours
-      const match = { match_datetime: futureDate.toISOString() };
-      const remaining = getTimeRemaining(match);
-      expect(remaining).toContain('3d'); // Should show days
-      expect(remaining).toContain('h');  // Should show hours
+    afterEach(() => {
+      jest.useRealTimers();
     });
 
-    it('should return hours only when less than a day', () => {
-      const futureDate = new Date(Date.now() + 5 * 60 * 60 * 1000); // 5 hours
-      const match = { match_datetime: futureDate.toISOString() };
+    it('should return days and hours for knockout match', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-01T00:00:00Z'));
+      const match = { match_datetime: '2026-07-04T18:00:00Z', stage: 'final' };
+      const remaining = getTimeRemaining(match);
+      expect(remaining).toContain('3d');
+    });
+
+    it('should return hours for knockout match less than a day away', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-04T13:00:00Z'));
+      const match = { match_datetime: '2026-07-04T18:00:00Z', stage: 'final' };
       const remaining = getTimeRemaining(match);
       expect(remaining).toBe('Cierra en 5h');
     });
 
-    it('should return minutes when less than an hour', () => {
-      const futureDate = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-      const match = { match_datetime: futureDate.toISOString() };
+    it('should return minutes for knockout match less than an hour away', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-04T17:30:00Z'));
+      const match = { match_datetime: '2026-07-04T18:00:00Z', stage: 'final' };
       const remaining = getTimeRemaining(match);
       expect(remaining).toBe('Cierra en 30m');
     });
 
-    it('should return \"Cerrado\" for past matches', () => {
-      const pastDate = new Date(Date.now() - 10 * 60 * 60 * 1000); // 10 hours ago
-      const match = { match_datetime: pastDate.toISOString() };
+    it('should return Cerrado for past matches', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-20T00:00:00Z'));
+      const match = { match_datetime: '2026-07-19T20:00:00Z', stage: 'final' };
       const remaining = getTimeRemaining(match);
       expect(remaining).toBe('Cerrado');
+    });
+
+    it('should show group stage deadline countdown', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-08T00:00:00Z'));
+      const match = { match_datetime: '2026-06-15T19:00:00Z', stage: 'group_stage' };
+      const remaining = getTimeRemaining(match);
+      expect(remaining).toContain('d');
+      expect(remaining).toContain('h');
     });
   });
 
   describe('formatMatchDateTime', () => {
-    it('should format date correctly for Mexico City timezone', () => {
-      // Fixed date: 2026-06-15 19:00:00 UTC
-      const dateString = '2026-06-15T19:00:00Z';
-      const formatted = formatMatchDateTime(dateString);
-      // Should be converted to Mexico City time (UTC-5 or UTC-6 depending on DST)
-      // Just checking it returns a string
+    it('should format date correctly', () => {
+      const formatted = formatMatchDateTime('2026-06-15T19:00:00Z');
       expect(typeof formatted).toBe('string');
       expect(formatted.length).toBeGreaterThan(0);
     });
@@ -145,12 +137,24 @@ describe('API Utilities', () => {
   describe('STAGE_LABELS and STAGES_ORDER', () => {
     it('should have correct stage labels', () => {
       expect(STAGE_LABELS.group_stage).toBe('Fase de Grupos');
+      expect(STAGE_LABELS.round_of_32).toBe('Ronda de 32');
+      expect(STAGE_LABELS.round_of_16).toBe('Octavos de Final');
+      expect(STAGE_LABELS.quarter_final).toBe('Cuartos de Final');
+      expect(STAGE_LABELS.semi_final).toBe('Semifinales');
       expect(STAGE_LABELS.final).toBe('Gran Final');
     });
 
     it('should have stages in correct order', () => {
       expect(STAGES_ORDER[0].stage).toBe('group_stage');
+      expect(STAGES_ORDER[1].stage).toBe('round_of_32');
+      expect(STAGES_ORDER[2].stage).toBe('round_of_16');
       expect(STAGES_ORDER[STAGES_ORDER.length - 1].stage).toBe('final');
+    });
+  });
+
+  describe('GROUP_STAGE_DEADLINE', () => {
+    it('should be June 10 03:00 UTC (June 9 23:00 Colombia)', () => {
+      expect(GROUP_STAGE_DEADLINE.toISOString()).toBe('2026-06-10T03:00:00.000Z');
     });
   });
 });

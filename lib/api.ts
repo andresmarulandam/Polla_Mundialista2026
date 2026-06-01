@@ -184,6 +184,8 @@ export function calculatePoints(
   return 0;
 }
 
+export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T03:00:00Z'); // Jun 9 23:00 Colombia
+
 export function canPredict(match: {
   status: string;
   home_score: number | null;
@@ -195,18 +197,27 @@ export function canPredict(match: {
   if (match.home_score !== null || match.away_score !== null) return false;
 
   const now = new Date();
+
+  // Fase de grupos: plazo maximo hasta el 9 de junio
+  if (match.stage === 'group_stage') {
+    return now < GROUP_STAGE_DEADLINE;
+  }
+
+  // Knockout: 48 horas antes del partido
   const matchTime = new Date(match.match_datetime);
   const hoursDiff = (matchTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-  const deadlineHours = match.stage === 'group_stage' ? 48 : 48;
-
-  return hoursDiff > deadlineHours;
+  return hoursDiff > 48;
 }
 
-export function getTimeRemaining(match: { match_datetime: string }): string {
+export function getTimeRemaining(match: { match_datetime: string; stage?: string }): string {
   const now = new Date();
-  const matchTime = new Date(match.match_datetime);
-  const diff = matchTime.getTime() - now.getTime();
+
+  // Fase de grupos: mostrar tiempo hasta el 9 de junio
+  const deadline = match.stage === 'group_stage'
+    ? GROUP_STAGE_DEADLINE
+    : new Date(match.match_datetime);
+
+  const diff = deadline.getTime() - now.getTime();
 
   if (diff <= 0) return 'Cerrado';
 
