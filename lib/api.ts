@@ -10,20 +10,20 @@ const SPORTSDB_BASE_URL = 'https://www.thesportsdb.com/api/v1/json/123';
 
 export const STAGE_LABELS: Record<MatchStage, string> = {
   group_stage: 'Fase de Grupos',
-  round_of_32: 'Octavos de Final',
-  round_of_16: 'Cuartos de Final',
-  quarter_final: 'Semifinales',
-  semi_final: 'Final',
+  round_of_32: 'Ronda de 32',
+  round_of_16: 'Octavos de Final',
+  quarter_final: 'Cuartos de Final',
+  semi_final: 'Semifinales',
   third_place: 'Partido por el 3er Lugar',
   final: 'Gran Final',
 };
 
 export const STAGES_ORDER: { stage: MatchStage; label: string }[] = [
   { stage: 'group_stage', label: 'Fase de Grupos' },
-  { stage: 'round_of_32', label: 'Octavos de Final' },
-  { stage: 'round_of_16', label: 'Cuartos de Final' },
-  { stage: 'quarter_final', label: 'Semifinales' },
-  { stage: 'semi_final', label: 'Final' },
+  { stage: 'round_of_32', label: 'Ronda de 32' },
+  { stage: 'round_of_16', label: 'Octavos de Final' },
+  { stage: 'quarter_final', label: 'Cuartos de Final' },
+  { stage: 'semi_final', label: 'Semifinales' },
   { stage: 'third_place', label: 'Partido por el 3er Lugar' },
   { stage: 'final', label: 'Gran Final' },
 ];
