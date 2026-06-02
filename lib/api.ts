@@ -8,6 +8,26 @@ export function normalize(str: string): string {
 
 const SPORTSDB_BASE_URL = 'https://www.thesportsdb.com/api/v1/json/123';
 
+export const ALL_TEAMS = [
+  'Alemania', 'Argelia', 'Arabia Saudita', 'Argentina', 'Australia', 'Austria',
+  'Belgica', 'Bosnia y Herzegovina', 'Brasil',
+  'Cabo Verde', 'Canada', 'Colombia', 'Costa de Marfil', 'Croacia', 'Curazao',
+  'Corea del Sur', 'Ecuador', 'Egipto', 'Escocia', 'Espana', 'Estados Unidos',
+  'Francia',
+  'Ghana',
+  'Haiti',
+  'Inglaterra', 'Iran', 'Irak',
+  'Japon', 'Jordania',
+  'Marruecos', 'Mexico',
+  'Nueva Zelanda', 'Noruega',
+  'Paises Bajos', 'Panama', 'Paraguay', 'Portugal',
+  'Qatar',
+  'RD Congo', 'Republica Checa',
+  'Senegal', 'Sudafrica', 'Suecia', 'Suiza',
+  'Tunez', 'Turquia',
+  'Uruguay', 'Uzbekistan',
+];
+
 export const STAGE_LABELS: Record<MatchStage, string> = {
   group_stage: 'Fase de Grupos',
   round_of_32: 'Ronda de 32',
@@ -186,15 +206,28 @@ export function calculatePoints(
 
 export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T03:00:00Z'); // Jun 9 23:00 Colombia
 
+const REAL_TEAMS = new Set(ALL_TEAMS);
+
+export function teamsAreReady(homeTeam: string, awayTeam: string): boolean {
+  return REAL_TEAMS.has(homeTeam) && REAL_TEAMS.has(awayTeam);
+}
+
 export function canPredict(match: {
   status: string;
   home_score: number | null;
   away_score: number | null;
   match_datetime: string;
   stage: MatchStage;
+  home_team: string;
+  away_team: string;
 }): boolean {
   if (match.status === 'finished') return false;
   if (match.home_score !== null || match.away_score !== null) return false;
+
+  // Knockout: no predecir si los equipos aun no se conocen
+  if (match.stage !== 'group_stage' && !teamsAreReady(match.home_team, match.away_team)) {
+    return false;
+  }
 
   const now = new Date();
 
@@ -203,7 +236,7 @@ export function canPredict(match: {
     return now < GROUP_STAGE_DEADLINE;
   }
 
-  // Knockout: 48 horas antes del partido
+  // Knockout con equipos reales: 48 horas antes del partido
   const matchTime = new Date(match.match_datetime);
   const hoursDiff = (matchTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   return hoursDiff > 48;

@@ -77,12 +77,12 @@ export async function GET(request: NextRequest) {
     });
   });
 
-  // Add special bet points (50 each)
+  // Add special bet points (25 each)
   specialBets?.forEach((sb) => {
     const existing = userStats.get(sb.user_id) || { totalPoints: 0, exactCount: 0 };
     let bonus = 0;
-    if (actualChampion && sb.champion === actualChampion) bonus += 50;
-    if (actualTopScorer && sb.top_scorer && normalize(sb.top_scorer) === normalize(actualTopScorer)) bonus += 50;
+    if (actualChampion && sb.champion === actualChampion) bonus += 25;
+    if (actualTopScorer && sb.top_scorer && normalize(sb.top_scorer) === normalize(actualTopScorer)) bonus += 25;
     if (bonus > 0) {
       userStats.set(sb.user_id, {
         totalPoints: existing.totalPoints + bonus,

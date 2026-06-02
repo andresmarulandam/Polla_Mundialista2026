@@ -9,6 +9,8 @@ import {
   getTimeRemaining,
   formatMatchDateTime,
   calculatePoints,
+  ALL_TEAMS,
+  teamsAreReady,
 } from '@/lib/api';
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -16,26 +18,6 @@ const COUNTRY_FLAGS: Record<string, string> = {
   'Estados Unidos': '\u{1F1FA}\u{1F1F8}',
   Canada: '\u{1F1E8}\u{1F1E6}',
 };
-
-const ALL_TEAMS = [
-  'Alemania', 'Argelia', 'Arabia Saudita', 'Argentina', 'Australia', 'Austria',
-  'Belgica', 'Bosnia y Herzegovina', 'Brasil',
-  'Cabo Verde', 'Canada', 'Colombia', 'Costa de Marfil', 'Croacia', 'Curazao',
-  'Corea del Sur', 'Ecuador', 'Egipto', 'Escocia', 'Espana', 'Estados Unidos',
-  'Francia',
-  'Ghana',
-  'Haiti',
-  'Inglaterra', 'Iran', 'Irak',
-  'Japon', 'Jordania',
-  'Marruecos', 'Mexico',
-  'Nueva Zelanda', 'Noruega',
-  'Paises Bajos', 'Panama', 'Paraguay', 'Portugal',
-  'Qatar',
-  'RD Congo', 'Republica Checa',
-  'Senegal', 'Sudafrica', 'Suecia', 'Suiza',
-  'Tunez', 'Turquia',
-  'Uruguay', 'Uzbekistan',
-];
 
 interface MatchWithPrediction {
   id: string;
@@ -254,7 +236,7 @@ export default function HomePage() {
       )}
 
       <div className="card">
-        <h2 className="text-lg font-bold mb-3 text-secondary">Predicciones Especiales (50 pts c/u)</h2>
+        <h2 className="text-lg font-bold mb-3 text-secondary">Predicciones Especiales (25 pts c/u)</h2>
         {savedSpecialBet && !tournamentStarted ? (
           <p className="text-sm text-text-secondary mb-3">
             Ya hiciste tus predicciones especiales. Puedes modificarlas antes de que empiece el Mundial.
@@ -364,6 +346,7 @@ function MatchCard({
 
   const pending = pendingPredictions.get(match.id);
   const isFinished = match.status === 'finished';
+  const isKnockoutPlaceholder = match.stage !== 'group_stage' && !teamsAreReady(match.home_team, match.away_team);
   const points = match.user_prediction && match.home_score != null && match.away_score != null
     ? calculatePoints(
         match.user_prediction.home_score_predicted,
@@ -463,13 +446,15 @@ function MatchCard({
           {match.country && ` (${COUNTRY_FLAGS[match.country] || ''} ${match.country})`}
         </div>
         <div className="text-sm font-medium text-secondary">
-          {matchOpen ? getTimeRemaining(match as any) : 'Cerrado'}
+          {isKnockoutPlaceholder ? 'Por definir' : matchOpen ? getTimeRemaining(match as any) : 'Cerrado'}
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 text-right">
-          <div className="text-lg font-semibold">{match.home_team}</div>
+          <div className={`text-lg font-semibold ${isKnockoutPlaceholder ? 'text-text-secondary italic' : ''}`}>
+            {isKnockoutPlaceholder ? 'Por definir' : match.home_team}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -521,7 +506,9 @@ function MatchCard({
         </div>
 
         <div className="flex-1">
-          <div className="text-lg font-semibold">{match.away_team}</div>
+          <div className={`text-lg font-semibold ${isKnockoutPlaceholder ? 'text-text-secondary italic' : ''}`}>
+            {isKnockoutPlaceholder ? 'Por definir' : match.away_team}
+          </div>
         </div>
       </div>
 

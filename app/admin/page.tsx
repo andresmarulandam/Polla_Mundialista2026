@@ -399,7 +399,7 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold mb-4">Resultados Reales</h2>
             <p className="text-sm text-text-secondary mb-4">
               Coloca el campeon y goleador reales. Cada usuario que acierte
-              recibira 50 puntos.
+              recibira 25 puntos.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
