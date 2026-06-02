@@ -63,48 +63,28 @@ export default function HomePage() {
   const tournamentStarted = new Date('2026-06-11T19:00:00Z') <= new Date();
 
   useEffect(() => {
-    checkSession();
+    loadHomeData();
   }, []);
 
-  async function checkSession() {
+  async function loadHomeData() {
     try {
-      const res = await fetch('/api/session');
-      const data = await res.json();
-      if (!res.ok || !data.session) {
+      const res = await fetch('/api/home-data');
+      if (!res.ok) {
         router.push('/login');
         return;
       }
+      const data = await res.json();
       setSession(data.session);
-      loadMatches();
-      loadSpecialBet();
-    } catch {
-      router.push('/login');
-    }
-  }
-
-  async function loadMatches() {
-    try {
-      const res = await fetch('/api/matches');
-      const data = await res.json();
       setMatches(data.matches || []);
-    } catch (err) {
-      console.error('Error loading matches:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadSpecialBet() {
-    try {
-      const res = await fetch('/api/special-bets');
-      const data = await res.json();
       if (data.specialBet) {
         setSavedSpecialBet(data.specialBet);
         setSpecialBetChampion(data.specialBet.champion || '');
         setSpecialBetScorer(data.specialBet.top_scorer || '');
       }
-    } catch (err) {
-      console.error('Error loading special bet:', err);
+    } catch {
+      router.push('/login');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -155,7 +135,7 @@ export default function HomePage() {
       if (res.ok) {
         setSuccessMessage('Prediccion guardada!');
         setTimeout(() => setSuccessMessage(''), 3000);
-        loadMatches();
+        loadHomeData();
         setPendingPredictions((prev) => {
           const next = new Map(prev);
           next.delete(matchId);
@@ -301,7 +281,7 @@ export default function HomePage() {
                 key={match.id}
                 match={match}
                 onPredict={handlePredict}
-                reloadMatches={loadMatches}
+                reloadMatches={loadHomeData}
                 pendingPredictions={pendingPredictions}
                 setPendingPredictions={setPendingPredictions}
                 setErrorMessage={setErrorMessage}

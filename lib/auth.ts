@@ -1,5 +1,4 @@
 import { SignJWT, jwtVerify } from 'jose';
-import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from './supabase';
 import { User, UserSession } from './types';
 
@@ -9,11 +8,19 @@ const SESSION_SECRET = new TextEncoder().encode(
 
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
+let bcryptModule: typeof import('bcryptjs') | null = null;
+async function getBcrypt() {
+  if (!bcryptModule) bcryptModule = await import('bcryptjs');
+  return bcryptModule;
+}
+
 export async function hashPassword(password: string): Promise<string> {
+  const bcrypt = await getBcrypt();
   return bcrypt.hash(password, 10);
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const bcrypt = await getBcrypt();
   return bcrypt.compare(password, hash);
 }
 
