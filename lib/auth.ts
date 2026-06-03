@@ -3,14 +3,14 @@ import { supabaseAdmin } from './supabase';
 import { User, UserSession } from './types';
 
 const SESSION_SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || 'polla-mundialista-secret-key-2026'
+  process.env.SESSION_SECRET || 'polla-mundialista-secret-key-2026',
 );
 
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
 let bcryptModule: typeof import('bcryptjs') | null = null;
 async function getBcrypt() {
-  if (!bcryptModule) bcryptModule = await import('bcryptjs');
+  bcryptModule ??= await import('bcryptjs');
   return bcryptModule;
 }
 
@@ -19,7 +19,10 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   const bcrypt = await getBcrypt();
   return bcrypt.compare(password, hash);
 }
@@ -38,7 +41,9 @@ export async function createSession(user: User): Promise<string> {
     .sign(SESSION_SECRET);
 }
 
-export async function verifySession(token: string): Promise<UserSession | null> {
+export async function verifySession(
+  token: string,
+): Promise<UserSession | null> {
   try {
     const { payload } = await jwtVerify(token, SESSION_SECRET);
     return payload as unknown as UserSession;
@@ -47,7 +52,10 @@ export async function verifySession(token: string): Promise<UserSession | null> 
   }
 }
 
-export async function createUser(name: string, password: string): Promise<User | null> {
+export async function createUser(
+  name: string,
+  password: string,
+): Promise<User | null> {
   const password_hash = await hashPassword(password);
 
   const { data, error } = await supabaseAdmin
@@ -57,7 +65,12 @@ export async function createUser(name: string, password: string): Promise<User |
     .single();
 
   if (error) {
-    console.error('Error creating user:', error.code, error.message, error.details);
+    console.error(
+      'Error creating user:',
+      error.code,
+      error.message,
+      error.details,
+    );
     return null;
   }
 
@@ -66,7 +79,7 @@ export async function createUser(name: string, password: string): Promise<User |
 
 export async function authenticateUser(
   name: string,
-  password: string
+  password: string,
 ): Promise<UserSession | null> {
   const { data: user, error } = await supabaseAdmin
     .from('users')

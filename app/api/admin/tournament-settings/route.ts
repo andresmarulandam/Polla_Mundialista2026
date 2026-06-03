@@ -7,7 +7,8 @@ export async function GET() {
     .from('tournament_settings')
     .select('*');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
 
   const settings: Record<string, string | null> = {};
   data?.forEach((row) => {
@@ -19,10 +20,12 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
-  if (!token) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+  if (!token)
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
   const session = await verifySession(token);
-  if (!session || !session.is_admin) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  if (!session?.is_admin)
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
   try {
     const body = await request.json();
@@ -33,14 +36,28 @@ export async function PUT(request: NextRequest) {
       updates.push(
         supabaseAdmin
           .from('tournament_settings')
-          .upsert({ setting_key: 'champion', setting_value: champion, updated_at: new Date().toISOString() }, { onConflict: 'setting_key' })
+          .upsert(
+            {
+              setting_key: 'champion',
+              setting_value: champion,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'setting_key' },
+          ),
       );
     }
     if (topScorer !== undefined) {
       updates.push(
         supabaseAdmin
           .from('tournament_settings')
-          .upsert({ setting_key: 'top_scorer', setting_value: topScorer, updated_at: new Date().toISOString() }, { onConflict: 'setting_key' })
+          .upsert(
+            {
+              setting_key: 'top_scorer',
+              setting_value: topScorer,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'setting_key' },
+          ),
       );
     }
 

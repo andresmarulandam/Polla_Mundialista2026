@@ -38,6 +38,13 @@ export default function LoginPage() {
     }
   };
 
+  let buttonText = 'Entrar';
+  if (loading) {
+    buttonText = 'Cargando...';
+  } else if (isRegister) {
+    buttonText = 'Crear Cuenta';
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="card w-full max-w-md">
@@ -47,8 +54,9 @@ export default function LoginPage() {
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Nombre</label>
+            <label htmlFor="login-name" className="block text-sm font-medium mb-2">Nombre</label>
             <input
+              id="login-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -61,8 +69,9 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Contraseña (4 dígitos)</label>
+            <label htmlFor="login-password" className="block text-sm font-medium mb-2">Contraseña (4 dígitos)</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -83,7 +92,7 @@ export default function LoginPage() {
             disabled={loading}
             className="btn-primary w-full disabled:opacity-50"
           >
-            {loading ? 'Cargando...' : isRegister ? 'Crear Cuenta' : 'Entrar'}
+            {buttonText}
           </button>
         </form>
 

@@ -44,12 +44,6 @@ export async function GET(request: NextRequest) {
   const actualChampion = settingsMap['champion'] || null;
   const actualTopScorer = settingsMap['top_scorer'] || null;
 
-  // Build special bets map
-  const specialBetsMap = new Map<string, { champion: string | null; top_scorer: string | null }>();
-  specialBets?.forEach((sb) => {
-    specialBetsMap.set(sb.user_id, { champion: sb.champion, top_scorer: sb.top_scorer });
-  });
-
   const userStats = new Map<string, { totalPoints: number; exactCount: number }>();
 
   // Calculate match points

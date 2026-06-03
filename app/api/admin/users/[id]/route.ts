@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const token = request.cookies.get('session')?.value;
 
@@ -14,7 +14,7 @@ export async function DELETE(
 
   const session = await verifySession(token);
 
-  if (!session || !session.is_admin) {
+  if (!session?.is_admin) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 

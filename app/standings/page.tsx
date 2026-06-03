@@ -12,6 +12,13 @@ interface Standing {
   exact_predictions: number;
 }
 
+function getRankLabel(index: number, rank: number) {
+  if (index === 0) return '🥇';
+  if (index === 1) return '🥈';
+  if (index === 2) return '🥉';
+  return rank;
+}
+
 export default function StandingsPage() {
   const router = useRouter();
   const [session, setSession] = useState<UserSession | null>(null);
@@ -26,12 +33,12 @@ export default function StandingsPage() {
     try {
       const res = await fetch('/api/session');
       const data = await res.json();
-      
+
       if (!res.ok || !data.session) {
         router.push('/login');
         return;
       }
-      
+
       setSession(data.session);
       loadStandings();
     } catch {
@@ -66,7 +73,9 @@ export default function StandingsPage() {
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-secondary">🏆 Tabla de Posiciones</h1>
+        <h1 className="text-2xl font-bold text-secondary">
+          🏆 Tabla de Posiciones
+        </h1>
         <button onClick={handleGoBack} className="btn-secondary">
           Volver
         </button>
@@ -79,7 +88,9 @@ export default function StandingsPage() {
               <th className="px-4 py-3 text-center">#</th>
               <th className="px-4 py-3 text-left">Nombre</th>
               <th className="px-4 py-3 text-center">Puntos</th>
-              <th className="px-4 py-3 text-center">Marcadores exactos acertados</th>
+              <th className="px-4 py-3 text-center">
+                Marcadores exactos acertados
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +102,7 @@ export default function StandingsPage() {
                 }`}
               >
                 <td className="px-4 py-3 text-center font-bold">
-                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : entry.rank}
+                  {getRankLabel(index, entry.rank)}
                 </td>
                 <td className="px-4 py-3 font-medium">{entry.user_name}</td>
                 <td className="px-4 py-3 text-center text-secondary font-bold">

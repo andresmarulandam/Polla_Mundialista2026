@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const session = await verifySession(token);
 
-  if (!session || !session.is_admin) {
+  if (!session?.is_admin) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 

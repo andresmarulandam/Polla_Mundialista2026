@@ -4,33 +4,39 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
-  if (!token) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+  if (!token)
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
   const session = await verifySession(token);
-  if (!session || !session.is_admin) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  if (!session?.is_admin)
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
   const { data: matches, error } = await supabaseAdmin
     .from('matches')
     .select('*')
     .order('match_datetime', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ matches: matches || [] });
 }
 
 export async function PUT(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
-  if (!token) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+  if (!token)
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
   const session = await verifySession(token);
-  if (!session || !session.is_admin) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  if (!session?.is_admin)
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
   try {
     const body = await request.json();
     const { matchId, homeTeam, awayTeam, homeScore, awayScore, status } = body;
 
-    if (!matchId) return NextResponse.json({ error: 'Falta matchId' }, { status: 400 });
+    if (!matchId)
+      return NextResponse.json({ error: 'Falta matchId' }, { status: 400 });
 
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -53,7 +59,8 @@ export async function PUT(request: NextRequest) {
       .update(updates)
       .eq('id', matchId);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
 
     return NextResponse.json({ success: true });
   } catch {

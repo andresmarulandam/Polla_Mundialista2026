@@ -59,9 +59,9 @@ export default function HomeClient({
   session,
   initialMatches,
   initialSpecialBet,
-}: HomeClientProps) {
+}: Readonly<HomeClientProps>) {
   const router = useRouter();
-  const [matches, setMatches] = useState<MatchWithPrediction[]>(initialMatches);
+  const matches = initialMatches;
   const [pendingPredictions, setPendingPredictions] = useState<
     Map<string, PendingPrediction>
   >(new Map());
@@ -76,6 +76,11 @@ export default function HomeClient({
   const [savedSpecialBet, setSavedSpecialBet] = useState(initialSpecialBet);
 
   const tournamentStarted = new Date('2026-06-11T19:00:00Z') <= new Date();
+
+  const specialBetStatusMessage = getSpecialBetStatusMessage(
+    savedSpecialBet,
+    tournamentStarted,
+  );
 
   async function handleSaveSpecialBet() {
     if (!specialBetChampion || !specialBetScorer) {
@@ -210,23 +215,22 @@ export default function HomeClient({
         <h2 className="text-lg font-bold mb-3 text-secondary">
           Predicciones Especiales (25 pts c/u)
         </h2>
-        {savedSpecialBet && !tournamentStarted ? (
+        {specialBetStatusMessage && (
           <p className="text-sm text-text-secondary mb-3">
-            Ya hiciste tus predicciones especiales. Puedes modificarlas antes de
-            que empiece el Mundial.
+            {specialBetStatusMessage}
           </p>
-        ) : savedSpecialBet && tournamentStarted ? (
-          <p className="text-sm text-text-secondary mb-3">
-            Las predicciones estan cerradas. El Mundial ya empezo.
-          </p>
-        ) : null}
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">
+            <label
+              htmlFor="special-bet-champion"
+              className="block text-sm font-medium mb-1 text-text-secondary"
+            >
               Campeon
             </label>
             <select
+              id="special-bet-champion"
               value={specialBetChampion}
               onChange={(e) => setSpecialBetChampion(e.target.value)}
               disabled={tournamentStarted}
@@ -241,10 +245,14 @@ export default function HomeClient({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">
+            <label
+              htmlFor="special-bet-scorer"
+              className="block text-sm font-medium mb-1 text-text-secondary"
+            >
               Goleador
             </label>
             <input
+              id="special-bet-scorer"
               type="text"
               value={specialBetScorer}
               onChange={(e) => setSpecialBetScorer(e.target.value)}
@@ -322,28 +330,28 @@ function MatchCard({
 }>) {
   const router = useRouter();
   const matchOpen = canPredict(match as any);
-  const hasExistingPrediction = !!match.user_prediction;
+  const hasExistingPrediction = Boolean(match.user_prediction);
   const [editMode, setEditMode] = useState(false);
   const [editHome, setEditHome] = useState('');
   const [editAway, setEditAway] = useState('');
 
   const pending = pendingPredictions.get(match.id);
+  const pendingHomeScore = pending?.homeScore;
+  const pendingAwayScore = pending?.awayScore;
   const isFinished = match.status === 'finished';
   const isKnockoutPlaceholder =
     match.stage !== 'group_stage' &&
     !teamsAreReady(match.home_team, match.away_team);
-  const points =
-    match.user_prediction &&
-    match.home_score != null &&
-    match.away_score != null
-      ? calculatePoints(
-          match.user_prediction.home_score_predicted,
-          match.user_prediction.away_score_predicted,
-          match.home_score,
-          match.away_score,
-          match.stage as MatchStage,
-        )
-      : (match.user_prediction?.points_earned ?? 0);
+  const points = calculateMatchPoints(match);
+  const showInput = !isFinished && matchOpen;
+  const homeDisplay = editMode
+    ? editHome
+    : getScoreInputDisplay(pendingHomeScore);
+  const awayDisplay = editMode
+    ? editAway
+    : getScoreInputDisplay(pendingAwayScore);
+  const canSubmit = pendingHomeScore != null && pendingAwayScore != null;
+  const matchPrediction = match.user_prediction;
 
   function updatePending(home: number | undefined, away: number | undefined) {
     setPendingPredictions((prev) => {
@@ -361,41 +369,45 @@ function MatchCard({
     const cleaned = val.replace(/\D/g, '');
     updatePending(
       cleaned === '' ? undefined : Number(cleaned),
-      pending?.awayScore,
+      pendingAwayScore,
     );
   }
 
   function handleAwayChange(val: string) {
     const cleaned = val.replace(/\D/g, '');
     updatePending(
-      pending?.homeScore,
+      pendingHomeScore,
       cleaned === '' ? undefined : Number(cleaned),
     );
   }
 
   function enterEditMode() {
-    setEditHome(match.user_prediction!.home_score_predicted.toString());
-    setEditAway(match.user_prediction!.away_score_predicted.toString());
+    if (!matchPrediction) return;
+    setEditHome(matchPrediction.home_score_predicted.toString());
+    setEditAway(matchPrediction.away_score_predicted.toString());
     setEditMode(true);
   }
 
   async function handleEditSave() {
     const h = editHome === '' ? 0 : Number(editHome);
     const a = editAway === '' ? 0 : Number(editAway);
+
     try {
       const res = await fetch('/api/predictions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId: match.id, homeScore: h, awayScore: a }),
       });
+
       if (res.ok) {
         setEditMode(false);
         router.refresh();
-      } else {
-        const data = await res.json();
-        setErrorMessage(data.error || 'Error al guardar');
-        setTimeout(() => setErrorMessage(''), 3000);
+        return;
       }
+
+      const data = await res.json();
+      setErrorMessage(data.error || 'Error al guardar');
+      setTimeout(() => setErrorMessage(''), 3000);
     } catch {
       setErrorMessage('Error al conectar');
       setTimeout(() => setErrorMessage(''), 3000);
@@ -403,29 +415,17 @@ function MatchCard({
   }
 
   function handleSubmit() {
-    const h = pending?.homeScore ?? 0;
-    const a = pending?.awayScore ?? 0;
-    updatePending(h, a);
+    updatePending(pendingHomeScore ?? 0, pendingAwayScore ?? 0);
     onPredict(match.id);
   }
 
-  const showInput = !isFinished && matchOpen;
-  const homeDisplay = editMode
-    ? editHome
-    : pending?.homeScore != null
-      ? String(pending.homeScore)
-      : '';
-  const awayDisplay = editMode
-    ? editAway
-    : pending?.awayScore != null
-      ? String(pending.awayScore)
-      : '';
-  const canSubmit =
-    pending != null && pending.homeScore != null && pending.awayScore != null;
-
   return (
     <div
-      className={`card ${isFinished && hasExistingPrediction && points > 0 ? 'border-green-500' : ''}`}
+      className={`card ${
+        isFinished && hasExistingPrediction && points > 0
+          ? 'border-green-500'
+          : ''
+      }`}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-text-secondary">
@@ -435,18 +435,16 @@ function MatchCard({
             ` (${COUNTRY_FLAGS[match.country] || ''} ${match.country})`}
         </div>
         <div className="text-sm font-medium text-secondary">
-          {isKnockoutPlaceholder
-            ? 'Por definir'
-            : matchOpen
-              ? getTimeRemaining(match as any)
-              : 'Cerrado'}
+          {getMatchStatusLabel(matchOpen, isKnockoutPlaceholder, match)}
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 text-right">
           <div
-            className={`text-lg font-semibold ${isKnockoutPlaceholder ? 'text-text-secondary italic' : ''}`}
+            className={`text-lg font-semibold ${
+              isKnockoutPlaceholder ? 'text-text-secondary italic' : ''
+            }`}
           >
             {isKnockoutPlaceholder ? 'Por definir' : match.home_team}
           </div>
@@ -502,7 +500,9 @@ function MatchCard({
 
         <div className="flex-1">
           <div
-            className={`text-lg font-semibold ${isKnockoutPlaceholder ? 'text-text-secondary italic' : ''}`}
+            className={`text-lg font-semibold ${
+              isKnockoutPlaceholder ? 'text-text-secondary italic' : ''
+            }`}
           >
             {isKnockoutPlaceholder ? 'Por definir' : match.away_team}
           </div>
@@ -521,13 +521,13 @@ function MatchCard({
         </div>
       )}
 
-      {hasExistingPrediction && !isFinished && !editMode && (
+      {matchPrediction && !isFinished && !editMode && (
         <div className="mt-3 flex items-center justify-between">
           <div className="text-sm text-text-secondary">
             Tu pronostico:{' '}
             <span className="font-bold text-white">
-              {match.user_prediction!.home_score_predicted} -{' '}
-              {match.user_prediction!.away_score_predicted}
+              {matchPrediction.home_score_predicted} -{' '}
+              {matchPrediction.away_score_predicted}
             </span>
           </div>
           <button
@@ -539,7 +539,7 @@ function MatchCard({
         </div>
       )}
 
-      {hasExistingPrediction && !isFinished && editMode && (
+      {matchPrediction && !isFinished && editMode && (
         <div className="mt-3 flex items-center justify-end gap-2">
           <button
             onClick={handleEditSave}
@@ -556,41 +556,27 @@ function MatchCard({
         </div>
       )}
 
-      {hasExistingPrediction && isFinished && (
+      {matchPrediction && isFinished && (
         <div className="mt-3 text-sm text-text-secondary">
           Tu pronostico:{' '}
           <span className="font-bold text-white">
-            {match.user_prediction!.home_score_predicted} -{' '}
-            {match.user_prediction!.away_score_predicted}
+            {matchPrediction.home_score_predicted} -{' '}
+            {matchPrediction.away_score_predicted}
           </span>
         </div>
       )}
 
-      {hasExistingPrediction &&
-        isFinished &&
-        (() => {
-          const predictedHome = match.user_prediction!.home_score_predicted;
-          const predictedAway = match.user_prediction!.away_score_predicted;
-          const isExact =
-            predictedHome === match.home_score &&
-            predictedAway === match.away_score;
-          return (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-text-secondary">Puntos:</span>
-              <span
-                className={`font-bold ${points > 0 ? 'text-green-400' : 'text-text-secondary'}`}
-              >
-                {points}
-              </span>
-              {isExact && (
-                <span className="text-green-400">Resultado exacto!</span>
-              )}
-              {!isExact && points > 0 && (
-                <span className="text-yellow-400">Ganador/empate correcto</span>
-              )}
-            </div>
-          );
-        })()}
+      {matchPrediction && isFinished && (
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-text-secondary">Puntos:</span>
+          <span
+            className={`font-bold ${points > 0 ? 'text-green-400' : 'text-text-secondary'}`}
+          >
+            {points}
+          </span>
+          {renderResultMessage(matchPrediction, match, points)}
+        </div>
+      )}
 
       {match.group_name && (
         <div className="mt-2 text-xs text-text-secondary">
@@ -599,4 +585,70 @@ function MatchCard({
       )}
     </div>
   );
+}
+
+function getScoreInputDisplay(value: number | undefined) {
+  return value == null ? '' : String(value);
+}
+
+function getMatchStatusLabel(
+  matchOpen: boolean,
+  isKnockoutPlaceholder: boolean,
+  match: MatchWithPrediction,
+) {
+  if (isKnockoutPlaceholder) return 'Por definir';
+  if (matchOpen) return getTimeRemaining(match as any);
+  return 'Cerrado';
+}
+
+function calculateMatchPoints(match: MatchWithPrediction) {
+  if (
+    match.user_prediction &&
+    match.home_score != null &&
+    match.away_score != null
+  ) {
+    return calculatePoints(
+      match.user_prediction.home_score_predicted,
+      match.user_prediction.away_score_predicted,
+      match.home_score,
+      match.away_score,
+      match.stage as MatchStage,
+    );
+  }
+
+  return match.user_prediction?.points_earned ?? 0;
+}
+
+function renderResultMessage(
+  prediction: NonNullable<MatchWithPrediction['user_prediction']>,
+  match: MatchWithPrediction,
+  points: number,
+) {
+  const predictedHome = prediction.home_score_predicted;
+  const predictedAway = prediction.away_score_predicted;
+  const isExact =
+    predictedHome === match.home_score && predictedAway === match.away_score;
+
+  if (isExact) {
+    return <span className="text-green-400">Resultado exacto!</span>;
+  }
+
+  if (points > 0) {
+    return <span className="text-yellow-400">Ganador/empate correcto</span>;
+  }
+
+  return null;
+}
+
+function getSpecialBetStatusMessage(
+  savedSpecialBet: HomeClientProps['initialSpecialBet'],
+  tournamentStarted: boolean,
+) {
+  if (!savedSpecialBet) {
+    return '';
+  }
+
+  return tournamentStarted
+    ? 'Las predicciones estan cerradas. El Mundial ya empezo.'
+    : 'Ya hiciste tus predicciones especiales. Puedes modificarlas antes de que empiece el Mundial.';
 }

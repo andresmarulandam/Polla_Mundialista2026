@@ -62,7 +62,7 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/session');
       const data = await res.json();
-      if (!res.ok || !data.session || !data.session.is_admin) {
+      if (!res.ok || !data?.session?.is_admin) {
         router.push('/');
         return;
       }
@@ -109,8 +109,8 @@ export default function AdminPage() {
       const body: Record<string, unknown> = { matchId };
       if (editHomeTeam) body.homeTeam = editHomeTeam;
       if (editAwayTeam) body.awayTeam = editAwayTeam;
-      if (editHome !== '') body.homeScore = parseInt(editHome) || 0;
-      if (editAway !== '') body.awayScore = parseInt(editAway) || 0;
+      if (editHome !== '') body.homeScore = Number.parseInt(editHome) || 0;
+      if (editAway !== '') body.awayScore = Number.parseInt(editAway) || 0;
       if (editHome !== '' && editAway !== '') body.status = 'finished';
 
       const res = await fetch('/api/admin/matches', {
@@ -283,9 +283,9 @@ export default function AdminPage() {
                             </div>
                           ) : (
                             <span>
-                              {match.home_score != null
-                                ? `${match.home_score} - ${match.away_score}`
-                                : '-'}
+                              {match.home_score == null
+                                ? '-'
+                                : `${match.home_score} - ${match.away_score}`}
                             </span>
                           )}
                         </td>
@@ -404,10 +404,11 @@ export default function AdminPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label htmlFor="champion-input" className="block text-sm font-medium mb-1">
                   Campeon real
                 </label>
                 <input
+                  id="champion-input"
                   type="text"
                   value={champion}
                   onChange={(e) => setChampion(e.target.value)}
@@ -416,10 +417,11 @@ export default function AdminPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label htmlFor="top-scorer-input" className="block text-sm font-medium mb-1">
                   Goleador real
                 </label>
                 <input
+                  id="top-scorer-input"
                   type="text"
                   value={topScorer}
                   onChange={(e) => setTopScorer(e.target.value)}
