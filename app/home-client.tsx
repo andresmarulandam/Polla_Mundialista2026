@@ -38,6 +38,12 @@ interface MatchWithPrediction {
     away_score_predicted: number;
     points_earned: number;
   } | null;
+  other_predictions: {
+    id: string;
+    user_name: string;
+    home_score_predicted: number;
+    away_score_predicted: number;
+  }[];
 }
 
 interface PendingPrediction {
@@ -334,6 +340,7 @@ function MatchCard({
   const [editMode, setEditMode] = useState(false);
   const [editHome, setEditHome] = useState('');
   const [editAway, setEditAway] = useState('');
+  const [showOthers, setShowOthers] = useState(false);
 
   const pending = pendingPredictions.get(match.id);
   const pendingHomeScore = pending?.homeScore;
@@ -575,6 +582,40 @@ function MatchCard({
             {points}
           </span>
           {renderResultMessage(matchPrediction, match, points)}
+        </div>
+      )}
+
+      {match.other_predictions.length > 0 && (
+        <div className="mt-3 border-t border-gray-800 pt-3">
+          <button
+            onClick={() => setShowOthers(!showOthers)}
+            className="text-sm text-secondary hover:text-white flex items-center gap-1 w-full text-left"
+          >
+            <span className="text-xs">{showOthers ? '▼' : '▶'}</span>
+            Pronosticos de los demas ({match.other_predictions.length})
+          </button>
+          {showOthers && (
+            <div className="mt-2 space-y-1">
+              {matchOpen ? (
+                <p className="text-xs text-text-secondary">
+                  Los pronosticos de los demas se veran a partir del 10 de junio.
+                </p>
+              ) : (
+                match.other_predictions.map((pred) => (
+                  <div key={pred.id} className="flex items-center justify-between text-sm">
+                    <span className="text-text-secondary">{pred.user_name}</span>
+                    <span className={`font-bold ${
+                      isFinished && pred.home_score_predicted === match.home_score && pred.away_score_predicted === match.away_score
+                        ? 'text-green-400'
+                        : 'text-white'
+                    }`}>
+                      {pred.home_score_predicted} - {pred.away_score_predicted}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
 
