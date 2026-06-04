@@ -469,7 +469,7 @@ function MatchCard({
                   : handleHomeChange(e.target.value)
               }
               disabled={!showInput && !editMode}
-              className="input w-8 text-center text-xl p-0"
+              className="input w-8 text-center text-xl p-0 !border-white"
               placeholder=""
             />
           )}
@@ -492,7 +492,7 @@ function MatchCard({
                   : handleAwayChange(e.target.value)
               }
               disabled={!showInput && !editMode}
-              className="input w-8 text-center text-xl p-0"
+              className="input w-8 text-center text-xl p-0 !border-white"
               placeholder=""
             />
           )}
