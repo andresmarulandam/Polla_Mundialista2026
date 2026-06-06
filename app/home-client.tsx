@@ -449,11 +449,9 @@ function MatchCard({
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 text-right">
           <div
-            className={`text-lg font-semibold ${
-              isKnockoutPlaceholder ? 'text-text-secondary italic' : ''
-            }`}
+            className="text-lg font-semibold"
           >
-            {isKnockoutPlaceholder ? 'Por definir' : match.home_team}
+            {match.home_team}
           </div>
         </div>
 
@@ -507,11 +505,9 @@ function MatchCard({
 
         <div className="flex-1">
           <div
-            className={`text-lg font-semibold ${
-              isKnockoutPlaceholder ? 'text-text-secondary italic' : ''
-            }`}
+            className="text-lg font-semibold"
           >
-            {isKnockoutPlaceholder ? 'Por definir' : match.away_team}
+            {match.away_team}
           </div>
         </div>
       </div>
@@ -637,7 +633,6 @@ function getMatchStatusLabel(
   isKnockoutPlaceholder: boolean,
   match: MatchWithPrediction,
 ) {
-  if (isKnockoutPlaceholder) return 'Por definir';
   if (matchOpen) return getTimeRemaining(match as any);
   return 'Cerrado';
 }

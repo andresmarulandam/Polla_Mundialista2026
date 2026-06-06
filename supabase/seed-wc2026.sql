@@ -11,30 +11,42 @@ END $$;
 
 -- Crear tablas de apuestas especiales si no existen
 CREATE TABLE IF NOT EXISTS special_bets (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) UNIQUE,
-  champion TEXT,
-  top_scorer TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    user_id UUID NOT NULL REFERENCES users (id) UNIQUE,
+    champion TEXT,
+    top_scorer TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
 ALTER TABLE special_bets DISABLE ROW LEVEL SECURITY;
+
 GRANT ALL ON special_bets TO service_role;
+
 GRANT ALL ON special_bets TO authenticated;
+
 GRANT ALL ON special_bets TO anon;
 
 CREATE TABLE IF NOT EXISTS tournament_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  setting_key TEXT UNIQUE NOT NULL,
-  setting_value TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    setting_key TEXT UNIQUE NOT NULL,
+    setting_value TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
 ALTER TABLE tournament_settings DISABLE ROW LEVEL SECURITY;
+
 GRANT ALL ON tournament_settings TO service_role;
+
 GRANT ALL ON tournament_settings TO authenticated;
+
 GRANT ALL ON tournament_settings TO anon;
 
--- Limpiar partidos anteriores
-TRUNCATE predictions, matches, admin_sync_log CASCADE;
+-- Limpiar datos anteriores
+TRUNCATE predictions,
+matches,
+admin_sync_log,
+special_bets,
+tournament_settings CASCADE;
 
 -- =============================================================
 -- PRIMERA RONDA - JORNADA 1 (72 partidos total, 24 esta jornada)
@@ -1174,10 +1186,10 @@ INSERT INTO
 VALUES (
         '00000000-0000-0000-0000-000000000089',
         'WC26-M089',
-        'Ganador 73',
         'Ganador 74',
+        'Ganador 77',
         '2026-07-05T20:00:00Z',
-        'NRG Stadium',
+        'Lincoln Financial Field',
         'Estados Unidos',
         'round_of_16',
         NULL,
@@ -1186,23 +1198,23 @@ VALUES (
     (
         '00000000-0000-0000-0000-000000000090',
         'WC26-M090',
+        'Ganador 73',
         'Ganador 75',
-        'Ganador 76',
         '2026-07-06T00:00:00Z',
-        'MetLife Stadium',
+        'NRG Stadium',
         'Estados Unidos',
         'round_of_16',
         NULL,
         'pending'
     ),
     (
-        '0000000-0000-0000-0000-000000000091',
+        '00000000-0000-0000-0000-000000000091',
         'WC26-M091',
-        'Ganador 77',
+        'Ganador 76',
         'Ganador 78',
         '2026-07-06T04:00:00Z',
-        'Estadio Azteca',
-        'Mexico',
+        'MetLife Stadium',
+        'Estados Unidos',
         'round_of_16',
         NULL,
         'pending'
@@ -1213,8 +1225,8 @@ VALUES (
         'Ganador 79',
         'Ganador 80',
         '2026-07-06T20:00:00Z',
-        'AT&T Stadium',
-        'Estados Unidos',
+        'Estadio Azteca',
+        'Mexico',
         'round_of_16',
         NULL,
         'pending'
@@ -1222,10 +1234,10 @@ VALUES (
     (
         '00000000-0000-0000-0000-000000000093',
         'WC26-M093',
-        'Ganador 81',
-        'Ganador 82',
+        'Ganador 83',
+        'Ganador 84',
         '2026-07-07T00:00:00Z',
-        'Lumen Field',
+        'AT&T Stadium',
         'Estados Unidos',
         'round_of_16',
         NULL,
@@ -1234,10 +1246,10 @@ VALUES (
     (
         '00000000-0000-0000-0000-000000000094',
         'WC26-M094',
-        'Ganador 83',
-        'Ganador 84',
+        'Ganador 81',
+        'Ganador 82',
         '2026-07-07T04:00:00Z',
-        'Mercedes-Benz Stadium',
+        'Lumen Field',
         'Estados Unidos',
         'round_of_16',
         NULL,
@@ -1249,7 +1261,7 @@ VALUES (
         'Ganador 86',
         'Ganador 87',
         '2026-07-08T00:00:00Z',
-        'GEHA Field at Arrowhead',
+        'Mercedes-Benz Stadium',
         'Estados Unidos',
         'round_of_16',
         NULL,
@@ -1290,7 +1302,7 @@ VALUES (
         'Ganador 89',
         'Ganador 90',
         '2026-07-12T00:00:00Z',
-        'SoFi Stadium',
+        'Gillette Stadium',
         'Estados Unidos',
         'quarter_final',
         NULL,
@@ -1299,10 +1311,10 @@ VALUES (
     (
         '00000000-0000-0000-0000-000000000098',
         'WC26-M098',
-        'Ganador 91',
-        'Ganador 92',
+        'Ganador 93',
+        'Ganador 94',
         '2026-07-12T04:00:00Z',
-        'GEHA Field at Arrowhead',
+        'SoFi Stadium',
         'Estados Unidos',
         'quarter_final',
         NULL,
@@ -1311,10 +1323,10 @@ VALUES (
     (
         '00000000-0000-0000-0000-000000000099',
         'WC26-M099',
-        'Ganador 93',
-        'Ganador 94',
+        'Ganador 91',
+        'Ganador 92',
         '2026-07-13T00:00:00Z',
-        'NRG Stadium',
+        'Hard Rock Stadium',
         'Estados Unidos',
         'quarter_final',
         NULL,
@@ -1326,7 +1338,7 @@ VALUES (
         'Ganador 95',
         'Ganador 96',
         '2026-07-13T04:00:00Z',
-        'AT&T Stadium',
+        'GEHA Field at Arrowhead',
         'Estados Unidos',
         'quarter_final',
         NULL,
