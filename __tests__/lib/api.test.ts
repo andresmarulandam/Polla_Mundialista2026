@@ -56,7 +56,7 @@ describe('API Utilities', () => {
 
     it('should block group stage prediction after June 9 deadline', () => {
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-06-10T04:00:00Z'));
+      jest.setSystemTime(new Date('2026-06-10T05:00:00Z'));
       const match = { ...baseMatch, stage: 'group_stage' as MatchStage, match_datetime: '2026-06-15T19:00:00Z' };
       expect(canPredict(match)).toBe(false);
     });
@@ -154,7 +154,7 @@ describe('API Utilities', () => {
 
   describe('GROUP_STAGE_DEADLINE', () => {
     it('should be June 10 03:00 UTC (June 9 23:00 Colombia)', () => {
-      expect(GROUP_STAGE_DEADLINE.toISOString()).toBe('2026-06-10T03:00:00.000Z');
+      expect(GROUP_STAGE_DEADLINE.toISOString()).toBe('2026-06-10T04:59:00.000Z');
     });
   });
 });

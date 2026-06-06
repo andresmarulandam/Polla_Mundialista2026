@@ -204,7 +204,7 @@ export function calculatePoints(
   return 0;
 }
 
-export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T03:00:00Z'); // Jun 9 23:00 Colombia
+export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T04:59:00Z'); // Jun 9 23:59 Colombia
 
 const REAL_TEAMS = new Set(ALL_TEAMS);
 
