@@ -5,7 +5,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, password, action } = body;
+    const { name: rawName, password, action } = body;
+    const name = rawName?.trim();
 
     if (!name || !password) {
       return NextResponse.json(
