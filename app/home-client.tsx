@@ -14,9 +14,9 @@ import {
 } from '@/lib/api';
 
 const COUNTRY_FLAGS: Record<string, string> = {
-  Mexico: '\u{1F1F2}\u{1F1FD}',
+  México: '\u{1F1F2}\u{1F1FD}',
   'Estados Unidos': '\u{1F1FA}\u{1F1F8}',
-  Canada: '\u{1F1E8}\u{1F1E6}',
+  Canadá: '\u{1F1E8}\u{1F1E6}',
 };
 
 interface MatchWithPrediction {
@@ -90,7 +90,7 @@ export default function HomeClient({
 
   async function handleSaveSpecialBet() {
     if (!specialBetChampion || !specialBetScorer) {
-      setErrorMessage('Debes seleccionar campeon y goleador');
+      setErrorMessage('Debes seleccionar campeón y goleador');
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
@@ -175,31 +175,33 @@ export default function HomeClient({
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-secondary">
+      <header className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-secondary truncate">
             Polla Mundialista
           </h1>
-          <p className="text-text-secondary">Hola, {session.name}!</p>
+          <p className="text-sm sm:text-base text-text-secondary truncate">
+            Hola, {session.name}!
+          </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 shrink-0">
           <button
             onClick={() => router.push('/standings')}
-            className="btn-secondary"
+            className="btn-secondary text-sm py-1.5 px-3"
           >
             Tabla
           </button>
           {session.is_admin && (
             <button
               onClick={() => router.push('/admin')}
-              className="btn-primary"
+              className="btn-primary text-sm py-1.5 px-3"
             >
               Admin
             </button>
           )}
           <button
             onClick={handleLogout}
-            className="text-text-secondary hover:text-white"
+            className="text-text-secondary hover:text-white text-sm"
           >
             Salir
           </button>
@@ -233,7 +235,7 @@ export default function HomeClient({
               htmlFor="special-bet-champion"
               className="block text-sm font-medium mb-1 text-text-secondary"
             >
-              Campeon
+              Campeón
             </label>
             <select
               id="special-bet-champion"
@@ -448,11 +450,7 @@ function MatchCard({
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 text-right">
-          <div
-            className="text-lg font-semibold"
-          >
-            {match.home_team}
-          </div>
+          <div className="text-lg font-semibold">{match.home_team}</div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -504,11 +502,7 @@ function MatchCard({
         </div>
 
         <div className="flex-1">
-          <div
-            className="text-lg font-semibold"
-          >
-            {match.away_team}
-          </div>
+          <div className="text-lg font-semibold">{match.away_team}</div>
         </div>
       </div>
 
@@ -594,17 +588,27 @@ function MatchCard({
             <div className="mt-2 space-y-1">
               {matchOpen ? (
                 <p className="text-xs text-text-secondary">
-                  Los pronosticos de los demas se veran a partir del 10 de junio.
+                  Los pronosticos de los demas se veran a partir del 10 de
+                  junio.
                 </p>
               ) : (
                 match.other_predictions.map((pred) => (
-                  <div key={pred.id} className="flex items-center justify-between text-sm">
-                    <span className="text-text-secondary">{pred.user_name}</span>
-                    <span className={`font-bold ${
-                      isFinished && pred.home_score_predicted === match.home_score && pred.away_score_predicted === match.away_score
-                        ? 'text-green-400'
-                        : 'text-white'
-                    }`}>
+                  <div
+                    key={pred.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-text-secondary">
+                      {pred.user_name}
+                    </span>
+                    <span
+                      className={`font-bold ${
+                        isFinished &&
+                        pred.home_score_predicted === match.home_score &&
+                        pred.away_score_predicted === match.away_score
+                          ? 'text-green-400'
+                          : 'text-white'
+                      }`}
+                    >
                       {pred.home_score_predicted} - {pred.away_score_predicted}
                     </span>
                   </div>

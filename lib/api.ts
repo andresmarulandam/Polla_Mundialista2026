@@ -1,31 +1,64 @@
 import { Match, MatchStage, MatchStatus } from './types';
 
 export function normalize(str: string): string {
-  return str.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .trim();
 }
 
 const SPORTSDB_BASE_URL = 'https://www.thesportsdb.com/api/v1/json/123';
 
 export const ALL_TEAMS = [
-  'Alemania', 'Argelia', 'Arabia Saudita', 'Argentina', 'Australia', 'Austria',
-  'Belgica', 'Bosnia y Herzegovina', 'Brasil',
-  'Cabo Verde', 'Canada', 'Colombia', 'Costa de Marfil', 'Croacia', 'Curazao',
-  'Corea del Sur', 'Ecuador', 'Egipto', 'Escocia', 'Espana', 'Estados Unidos',
+  'Alemania',
+  'Argelia',
+  'Arabia Saudita',
+  'Argentina',
+  'Australia',
+  'Austria',
+  'Bélgica',
+  'Bosnia y Herzegovina',
+  'Brasil',
+  'Cabo Verde',
+  'Canadá',
+  'Colombia',
+  'Costa de Marfil',
+  'Croacia',
+  'Curazao',
+  'Corea del Sur',
+  'Ecuador',
+  'Egipto',
+  'Escocia',
+  'España',
+  'Estados Unidos',
   'Francia',
   'Ghana',
-  'Haiti',
-  'Inglaterra', 'Iran', 'Irak',
-  'Japon', 'Jordania',
-  'Marruecos', 'Mexico',
-  'Nueva Zelanda', 'Noruega',
-  'Paises Bajos', 'Panama', 'Paraguay', 'Portugal',
+  'Haití',
+  'Inglaterra',
+  'Irán',
+  'Irak',
+  'Japón',
+  'Jordania',
+  'Marruecos',
+  'México',
+  'Nueva Zelanda',
+  'Noruega',
+  'Paises Bajos',
+  'Panamá',
+  'Paraguay',
+  'Portugal',
   'Qatar',
-  'RD Congo', 'Republica Checa',
-  'Senegal', 'Sudafrica', 'Suecia', 'Suiza',
-  'Tunez', 'Turquia',
-  'Uruguay', 'Uzbekistan',
+  'RD Congo',
+  'República Checa',
+  'Senegal',
+  'Sudáfrica',
+  'Suecia',
+  'Suiza',
+  'Túnez',
+  'Turquia',
+  'Uruguay',
+  'Uzbekistán',
 ];
 
 export const STAGE_LABELS: Record<MatchStage, string> = {
@@ -225,7 +258,10 @@ export function canPredict(match: {
   if (match.home_score !== null || match.away_score !== null) return false;
 
   // Knockout: no predecir si los equipos aun no se conocen
-  if (match.stage !== 'group_stage' && !teamsAreReady(match.home_team, match.away_team)) {
+  if (
+    match.stage !== 'group_stage' &&
+    !teamsAreReady(match.home_team, match.away_team)
+  ) {
     return false;
   }
 
@@ -242,13 +278,17 @@ export function canPredict(match: {
   return hoursDiff > 48;
 }
 
-export function getTimeRemaining(match: { match_datetime: string; stage?: string }): string {
+export function getTimeRemaining(match: {
+  match_datetime: string;
+  stage?: string;
+}): string {
   const now = new Date();
 
   // Fase de grupos: mostrar tiempo hasta el 9 de junio
-  const deadline = match.stage === 'group_stage'
-    ? GROUP_STAGE_DEADLINE
-    : new Date(match.match_datetime);
+  const deadline =
+    match.stage === 'group_stage'
+      ? GROUP_STAGE_DEADLINE
+      : new Date(match.match_datetime);
 
   const diff = deadline.getTime() - now.getTime();
 

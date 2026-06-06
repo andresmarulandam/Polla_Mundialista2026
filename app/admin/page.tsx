@@ -398,14 +398,17 @@ export default function AdminPage() {
           <div className="card">
             <h2 className="text-xl font-bold mb-4">Resultados Reales</h2>
             <p className="text-sm text-text-secondary mb-4">
-              Coloca el campeon y goleador reales. Cada usuario que acierte
-              recibira 25 puntos.
+              Coloca el campeón y goleador reales. Cada usuario que acierte
+              recibirá 25 puntos.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label htmlFor="champion-input" className="block text-sm font-medium mb-1">
-                  Campeon real
+                <label
+                  htmlFor="champion-input"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Campeón real
                 </label>
                 <input
                   id="champion-input"
@@ -413,11 +416,14 @@ export default function AdminPage() {
                   value={champion}
                   onChange={(e) => setChampion(e.target.value)}
                   className="input w-full text-sm"
-                  placeholder="Pais campeon..."
+                  placeholder="País campeón..."
                 />
               </div>
               <div>
-                <label htmlFor="top-scorer-input" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="top-scorer-input"
+                  className="block text-sm font-medium mb-1"
+                >
                   Goleador real
                 </label>
                 <input
@@ -468,7 +474,7 @@ export default function AdminPage() {
                   <thead>
                     <tr className="text-text-secondary border-b border-gray-700">
                       <th className="px-3 py-2 text-left">Usuario</th>
-                      <th className="px-3 py-2 text-left">Campeon</th>
+                      <th className="px-3 py-2 text-left">Campeón</th>
                       <th className="px-3 py-2 text-left">Goleador</th>
                     </tr>
                   </thead>
