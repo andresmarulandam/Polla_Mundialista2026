@@ -35,7 +35,7 @@ export default async function HomePage() {
         .eq('user_id', session.id)
         .maybeSingle(),
       supabaseAdmin.from('predictions').select('*').eq('user_id', session.id),
-      supabaseAdmin.from('predictions').select('*'),
+      supabaseAdmin.from('predictions').select('*').limit(10000),
       supabaseAdmin.from('users').select('id, name'),
       supabaseAdmin.from('special_bets').select('*'),
     ]);
