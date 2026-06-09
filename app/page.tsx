@@ -23,7 +23,7 @@ export default async function HomePage() {
   }
 
   // Fetch all data in parallel on the server
-  const [matchesResult, specialBetResult, predictionsResult, allPredictionsResult, usersResult, allSpecialBetsResult] =
+  const [matchesResult, specialBetResult, predictionsResult, usersResult, allSpecialBetsResult] =
     await Promise.all([
       supabaseAdmin
         .from('matches')
@@ -35,16 +35,29 @@ export default async function HomePage() {
         .eq('user_id', session.id)
         .maybeSingle(),
       supabaseAdmin.from('predictions').select('*').eq('user_id', session.id),
-      supabaseAdmin.from('predictions').select('*').limit(10000),
       supabaseAdmin.from('users').select('id, name'),
       supabaseAdmin.from('special_bets').select('*'),
     ]);
+
+  // Fetch all predictions in batches (Supabase limits to 1000 rows per query)
+  const allPredictions: any[] = [];
+  let offset = 0;
+  const batchSize = 1000;
+  while (true) {
+    const { data } = await supabaseAdmin
+      .from('predictions')
+      .select('*')
+      .range(offset, offset + batchSize - 1);
+    if (!data || data.length === 0) break;
+    allPredictions.push(...data);
+    if (data.length < batchSize) break;
+    offset += batchSize;
+  }
 
   console.timeEnd('SSR HomePage');
 
   const allMatches = matchesResult.data || [];
   const predictions = predictionsResult.data || [];
-  const allPredictions = allPredictionsResult.data || [];
   const users = usersResult.data || [];
   const allSpecialBets = allSpecialBetsResult.data || [];
 
