@@ -23,7 +23,7 @@ export default async function HomePage() {
   }
 
   // Fetch all data in parallel on the server
-  const [matchesResult, specialBetResult, predictionsResult, allPredictionsResult, usersResult] =
+  const [matchesResult, specialBetResult, predictionsResult, allPredictionsResult, usersResult, allSpecialBetsResult] =
     await Promise.all([
       supabaseAdmin
         .from('matches')
@@ -37,6 +37,7 @@ export default async function HomePage() {
       supabaseAdmin.from('predictions').select('*').eq('user_id', session.id),
       supabaseAdmin.from('predictions').select('*'),
       supabaseAdmin.from('users').select('id, name'),
+      supabaseAdmin.from('special_bets').select('*'),
     ]);
 
   console.timeEnd('SSR HomePage');
@@ -45,6 +46,7 @@ export default async function HomePage() {
   const predictions = predictionsResult.data || [];
   const allPredictions = allPredictionsResult.data || [];
   const users = usersResult.data || [];
+  const allSpecialBets = allSpecialBetsResult.data || [];
 
   const userMap = new Map<string, string>();
   users.forEach((u: any) => userMap.set(u.id, u.name));
@@ -66,6 +68,14 @@ export default async function HomePage() {
     other_predictions: predictionsByMatch.get(m.id) || [],
   }));
 
+  const otherSpecialBets = allSpecialBets
+    .filter((sb: any) => sb.user_id !== session.id)
+    .map((sb: any) => ({
+      user_name: userMap.get(sb.user_id) || 'Anonimo',
+      champion: sb.champion,
+      top_scorer: sb.top_scorer,
+    }));
+
   return (
     <HomeClient
       session={{
@@ -75,6 +85,7 @@ export default async function HomePage() {
       }}
       initialMatches={matchesWithPrediction}
       initialSpecialBet={specialBetResult.data || null}
+      otherSpecialBets={otherSpecialBets}
     />
   );
 }

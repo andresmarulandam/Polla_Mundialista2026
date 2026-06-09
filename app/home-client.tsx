@@ -59,12 +59,18 @@ interface HomeClientProps {
     champion: string | null;
     top_scorer: string | null;
   } | null;
+  otherSpecialBets: {
+    user_name: string;
+    champion: string | null;
+    top_scorer: string | null;
+  }[];
 }
 
 export default function HomeClient({
   session,
   initialMatches,
   initialSpecialBet,
+  otherSpecialBets,
 }: Readonly<HomeClientProps>) {
   const router = useRouter();
   const matches = initialMatches;
@@ -80,6 +86,7 @@ export default function HomeClient({
     initialSpecialBet?.top_scorer || '',
   );
   const [savedSpecialBet, setSavedSpecialBet] = useState(initialSpecialBet);
+  const [showOtherSpecialBets, setShowOtherSpecialBets] = useState(false);
 
   const tournamentStarted = new Date('2026-06-11T19:00:00Z') <= new Date();
 
@@ -289,6 +296,44 @@ export default function HomeClient({
               {savedSpecialBet.champion || '-'} /{' '}
               {savedSpecialBet.top_scorer || '-'}
             </span>
+          </div>
+        )}
+
+        {otherSpecialBets.length > 0 && (
+          <div className="mt-3 border-t border-gray-800 pt-3">
+            <button
+              onClick={() => setShowOtherSpecialBets(!showOtherSpecialBets)}
+              className="text-sm text-secondary hover:text-white flex items-center gap-1 w-full text-left"
+            >
+              <span className="text-xs">
+                {showOtherSpecialBets ? '▼' : '▶'}
+              </span>
+              Pronosticos de los demas ({otherSpecialBets.length})
+            </button>
+            {showOtherSpecialBets && (
+              <div className="mt-2 space-y-1">
+                {tournamentStarted ? (
+                  otherSpecialBets.map((sb) => (
+                    <div
+                      key={`${sb.user_name}-${sb.champion}-${sb.top_scorer}`}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="text-text-secondary">
+                        {sb.user_name}
+                      </span>
+                      <span className="font-bold text-white">
+                        {sb.champion || '-'} / {sb.top_scorer || '-'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-text-secondary">
+                    Los pronósticos de los demás se verán a partir del 10 de
+                    junio.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -588,7 +633,7 @@ function MatchCard({
             <div className="mt-2 space-y-1">
               {matchOpen ? (
                 <p className="text-xs text-text-secondary">
-                  Los pronosticos de los demas se veran a partir del 10 de
+                  Los pronósticos de los demás se verán a partir del 10 de
                   junio.
                 </p>
               ) : (
