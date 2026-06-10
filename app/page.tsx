@@ -81,13 +81,11 @@ export default async function HomePage() {
     other_predictions: predictionsByMatch.get(m.id) || [],
   }));
 
-  const otherSpecialBets = allSpecialBets
-    .filter((sb: any) => sb.user_id !== session.id)
-    .map((sb: any) => ({
-      user_name: userMap.get(sb.user_id) || 'Anonimo',
-      champion: sb.champion,
-      top_scorer: sb.top_scorer,
-    }));
+  const otherSpecialBets = allSpecialBets.map((sb: any) => ({
+    user_name: userMap.get(sb.user_id) || 'Anonimo',
+    champion: sb.champion,
+    top_scorer: sb.top_scorer,
+  }));
 
   return (
     <HomeClient
