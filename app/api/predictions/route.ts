@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { canPredict } from '@/lib/api';
 
 export async function POST(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
@@ -21,6 +22,21 @@ export async function POST(request: NextRequest) {
 
     if (!matchId || homeScore === undefined || awayScore === undefined) {
       return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 });
+    }
+
+    // Check if predictions are still open for this match
+    const { data: match } = await supabaseAdmin
+      .from('matches')
+      .select('*')
+      .eq('id', matchId)
+      .single();
+
+    if (!match) {
+      return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 });
+    }
+
+    if (!canPredict(match)) {
+      return NextResponse.json({ error: 'Las predicciones para este partido están cerradas' }, { status: 400 });
     }
 
     const { error } = await supabaseAdmin

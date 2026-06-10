@@ -88,6 +88,7 @@ export default function HomeClient({
   const [savedSpecialBet, setSavedSpecialBet] = useState(initialSpecialBet);
   const [showOtherSpecialBets, setShowOtherSpecialBets] = useState(false);
 
+  const specialBetsClosed = new Date() >= new Date('2026-06-10T04:59:00Z');
   const tournamentStarted = new Date('2026-06-11T19:00:00Z') <= new Date();
 
   const specialBetStatusMessage = getSpecialBetStatusMessage(
@@ -248,7 +249,7 @@ export default function HomeClient({
               id="special-bet-champion"
               value={specialBetChampion}
               onChange={(e) => setSpecialBetChampion(e.target.value)}
-              disabled={tournamentStarted}
+              disabled={specialBetsClosed}
               className="input w-full text-sm"
             >
               <option value="">Seleccionar pais...</option>
@@ -271,14 +272,14 @@ export default function HomeClient({
               type="text"
               value={specialBetScorer}
               onChange={(e) => setSpecialBetScorer(e.target.value)}
-              disabled={tournamentStarted}
+              disabled={specialBetsClosed}
               className="input w-full text-sm"
               placeholder="Nombre del jugador..."
             />
           </div>
         </div>
 
-        {!tournamentStarted && (
+        {new Date() < new Date('2026-06-10T04:59:00Z') && (
           <div className="mt-3 flex justify-end">
             <button
               onClick={handleSaveSpecialBet}
@@ -312,7 +313,7 @@ export default function HomeClient({
             </button>
             {showOtherSpecialBets && (
               <div className="mt-2 space-y-1">
-                {tournamentStarted ? (
+                {specialBetsClosed ? (
                   otherSpecialBets.map((sb) => (
                     <div
                       key={`${sb.user_name}-${sb.champion}-${sb.top_scorer}`}
@@ -563,7 +564,7 @@ function MatchCard({
         </div>
       )}
 
-      {matchPrediction && !isFinished && !editMode && (
+      {matchPrediction && matchOpen && !isFinished && !editMode && (
         <div className="mt-3 flex items-center justify-between">
           <div className="text-sm text-text-secondary">
             Tu pronostico:{' '}
