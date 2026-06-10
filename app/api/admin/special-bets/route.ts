@@ -12,12 +12,21 @@ export async function GET(request: NextRequest) {
   if (!session?.is_admin)
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
-  const { data: bets, error: betsError } = await supabaseAdmin
-    .from('special_bets')
-    .select('*');
-
-  if (betsError)
-    return NextResponse.json({ error: betsError.message }, { status: 500 });
+  // Fetch all special_bets in batches (Supabase limits to 1000 rows per query)
+  let bets: any[] = [];
+  let offset = 0;
+  const batchSize = 1000;
+  while (true) {
+    const { data, error } = await supabaseAdmin
+      .from('special_bets')
+      .select('*')
+      .range(offset, offset + batchSize - 1);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data || data.length === 0) break;
+    bets.push(...data);
+    if (data.length < batchSize) break;
+    offset += batchSize;
+  }
 
   const { data: users } = await supabaseAdmin.from('users').select('id, name');
 
