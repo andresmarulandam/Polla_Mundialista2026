@@ -17,23 +17,37 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Sesion invalida' }, { status: 401 });
   }
 
-  const { data: predictions } = await supabaseAdmin
-    .from('predictions')
-    .select('*');
+  // Fetch all in batches (Supabase limits to 1000 rows per query)
+  let predictions: any[] = [];
+  let offset = 0;
+  const batchSize = 1000;
+  while (true) {
+    const { data } = await supabaseAdmin.from('predictions').select('*').range(offset, offset + batchSize - 1);
+    if (!data || data.length === 0) break;
+    predictions.push(...data);
+    if (data.length < batchSize) break;
+    offset += batchSize;
+  }
+
+  let specialBets: any[] = [];
+  offset = 0;
+  while (true) {
+    const { data } = await supabaseAdmin.from('special_bets').select('*').range(offset, offset + batchSize - 1);
+    if (!data || data.length === 0) break;
+    specialBets.push(...data);
+    if (data.length < batchSize) break;
+    offset += batchSize;
+  }
 
   const { data: matches } = await supabaseAdmin
     .from('matches')
-    .select('*');
-
-  const { data: specialBets } = await supabaseAdmin
-    .from('special_bets')
     .select('*');
 
   const { data: settings } = await supabaseAdmin
     .from('tournament_settings')
     .select('*');
 
-  if (!predictions || !matches) {
+  if (!matches) {
     return NextResponse.json({ standings: [] });
   }
 
@@ -72,7 +86,7 @@ export async function GET(request: NextRequest) {
   });
 
   // Add special bet points (25 each)
-  specialBets?.forEach((sb) => {
+  specialBets.forEach((sb) => {
     const existing = userStats.get(sb.user_id) || { totalPoints: 0, exactCount: 0 };
     let bonus = 0;
     if (actualChampion && sb.champion === actualChampion) bonus += 25;
