@@ -238,6 +238,7 @@ export function calculatePoints(
 }
 
 export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T04:59:00Z'); // Jun 9 23:59 Colombia
+export const ROUND_OF_32_DEADLINE = new Date('2026-06-28T15:00:00Z'); // Jun 28 10:00 Colombia
 
 const REAL_TEAMS = new Set(ALL_TEAMS);
 
@@ -272,7 +273,12 @@ export function canPredict(match: {
     return now < GROUP_STAGE_DEADLINE;
   }
 
-  // Knockout con equipos reales: 48 horas antes del partido
+  // Ronda de 32: plazo fijo hasta el 28 de junio 10am Colombia
+  if (match.stage === 'round_of_32') {
+    return now < ROUND_OF_32_DEADLINE;
+  }
+
+  // Demas etapas knockout: 48 horas antes del partido
   const matchTime = new Date(match.match_datetime);
   const hoursDiff = (matchTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   return hoursDiff > 48;
@@ -285,10 +291,15 @@ export function getTimeRemaining(match: {
   const now = new Date();
 
   // Fase de grupos: mostrar tiempo hasta el 9 de junio
-  const deadline =
-    match.stage === 'group_stage'
-      ? GROUP_STAGE_DEADLINE
-      : new Date(match.match_datetime);
+  // Ronda de 32: mostrar tiempo hasta el 28 de junio 10am
+  let deadline: Date;
+  if (match.stage === 'group_stage') {
+    deadline = GROUP_STAGE_DEADLINE;
+  } else if (match.stage === 'round_of_32') {
+    deadline = ROUND_OF_32_DEADLINE;
+  } else {
+    deadline = new Date(match.match_datetime);
+  }
 
   const diff = deadline.getTime() - now.getTime();
 

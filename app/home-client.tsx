@@ -634,8 +634,8 @@ function MatchCard({
             <div className="mt-2 space-y-1">
               {matchOpen ? (
                 <p className="text-xs text-text-secondary">
-                  Los pronósticos de los demás se verán a partir del 10 de
-                  junio.
+                  Los pronósticos de los demás se verán después del{' '}
+                  {match.stage === 'round_of_32' ? '28 de junio' : '10 de junio'}.
                 </p>
               ) : (
                 match.other_predictions.map((pred) => (
@@ -684,6 +684,7 @@ function getMatchStatusLabel(
   match: MatchWithPrediction,
 ) {
   if (matchOpen) return getTimeRemaining(match as any);
+  if (isKnockoutPlaceholder) return 'Equipos por definir';
   return 'Cerrado';
 }
 
