@@ -87,6 +87,18 @@ export default function HomeClient({
   );
   const [savedSpecialBet, setSavedSpecialBet] = useState(initialSpecialBet);
   const [showOtherSpecialBets, setShowOtherSpecialBets] = useState(false);
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(
+    () => new Set(['round_of_32']),
+  );
+
+  function toggleStage(stage: string) {
+    setExpandedStages((prev) => {
+      const next = new Set(prev);
+      if (next.has(stage)) next.delete(stage);
+      else next.add(stage);
+      return next;
+    });
+  }
 
   const specialBetsClosed = new Date() >= new Date('2026-06-10T04:59:00Z');
   const tournamentStarted = new Date('2026-06-11T19:00:00Z') <= new Date();
@@ -341,19 +353,29 @@ export default function HomeClient({
 
       {groupedMatches.map(({ stage, label, matches: stageMatches }) => (
         <div key={stage}>
-          <h2 className="text-xl font-bold mb-4 text-secondary">{label}</h2>
-          <div className="space-y-3">
-            {stageMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                onPredict={handlePredict}
-                pendingPredictions={pendingPredictions}
-                setPendingPredictions={setPendingPredictions}
-                setErrorMessage={setErrorMessage}
-              />
-            ))}
-          </div>
+          <button
+            onClick={() => toggleStage(stage)}
+            className="w-full flex items-center justify-between mb-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors"
+          >
+            <h2 className="text-xl font-bold text-secondary text-left">{label}</h2>
+            <span className="text-text-secondary text-sm shrink-0 ml-2">
+              {expandedStages.has(stage) ? '▾' : '▸'} ({stageMatches.length})
+            </span>
+          </button>
+          {expandedStages.has(stage) && (
+            <div className="space-y-3">
+              {stageMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  onPredict={handlePredict}
+                  pendingPredictions={pendingPredictions}
+                  setPendingPredictions={setPendingPredictions}
+                  setErrorMessage={setErrorMessage}
+                />
+              ))}
+            </div>
+          )}
         </div>
       ))}
 

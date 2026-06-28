@@ -244,6 +244,7 @@ const REAL_TEAMS = new Set(ALL_TEAMS);
 const NORMALIZED_TEAMS = new Set(ALL_TEAMS.map(normalize));
 
 export function teamsAreReady(homeTeam: string, awayTeam: string): boolean {
+  if (!homeTeam || !awayTeam) return false;
   return (
     NORMALIZED_TEAMS.has(normalize(homeTeam)) &&
     NORMALIZED_TEAMS.has(normalize(awayTeam))
