@@ -238,13 +238,16 @@ export function calculatePoints(
 }
 
 export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T04:59:00Z'); // Jun 9 23:59 Colombia
-export const ROUND_OF_32_DEADLINE = new Date('2026-06-28T18:00:00Z'); // Jun 28 13:00 Colombia
+export const ROUND_OF_32_DEADLINE = new Date('2026-06-28T18:30:00Z'); // Jun 28 13:30 Colombia
 
 const REAL_TEAMS = new Set(ALL_TEAMS);
 const NORMALIZED_TEAMS = new Set(ALL_TEAMS.map(normalize));
 
 export function teamsAreReady(homeTeam: string, awayTeam: string): boolean {
-  return NORMALIZED_TEAMS.has(normalize(homeTeam)) && NORMALIZED_TEAMS.has(normalize(awayTeam));
+  return (
+    NORMALIZED_TEAMS.has(normalize(homeTeam)) &&
+    NORMALIZED_TEAMS.has(normalize(awayTeam))
+  );
 }
 
 export function canPredict(match: {
