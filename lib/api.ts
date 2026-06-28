@@ -241,9 +241,10 @@ export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T04:59:00Z'); // Jun 9 2
 export const ROUND_OF_32_DEADLINE = new Date('2026-06-28T15:00:00Z'); // Jun 28 10:00 Colombia
 
 const REAL_TEAMS = new Set(ALL_TEAMS);
+const NORMALIZED_TEAMS = new Set(ALL_TEAMS.map(normalize));
 
 export function teamsAreReady(homeTeam: string, awayTeam: string): boolean {
-  return REAL_TEAMS.has(homeTeam) && REAL_TEAMS.has(awayTeam);
+  return NORMALIZED_TEAMS.has(normalize(homeTeam)) && NORMALIZED_TEAMS.has(normalize(awayTeam));
 }
 
 export function canPredict(match: {
