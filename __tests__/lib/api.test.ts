@@ -4,6 +4,7 @@ import {
   getTimeRemaining,
   formatMatchDateTime,
   GROUP_STAGE_DEADLINE,
+  ROUND_OF_16_DEADLINE,
   STAGE_LABELS,
   STAGES_ORDER,
 } from '@/lib/api';
@@ -153,8 +154,42 @@ describe('API Utilities', () => {
   });
 
   describe('GROUP_STAGE_DEADLINE', () => {
-    it('should be June 10 03:00 UTC (June 9 23:00 Colombia)', () => {
+    it('should be June 10 04:59 UTC (June 9 23:59 Colombia)', () => {
       expect(GROUP_STAGE_DEADLINE.toISOString()).toBe('2026-06-10T04:59:00.000Z');
+    });
+  });
+
+  describe('ROUND_OF_16_DEADLINE', () => {
+    it('should be July 4 16:00 UTC (July 4 11:00 Colombia)', () => {
+      expect(ROUND_OF_16_DEADLINE.toISOString()).toBe('2026-07-04T16:00:00.000Z');
+    });
+  });
+
+  describe('canPredict round_of_16', () => {
+    const baseMatch = {
+      status: 'pending' as const,
+      home_score: null,
+      away_score: null,
+      home_team: 'Brasil',
+      away_team: 'Noruega',
+    };
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should allow round_of_16 prediction before July 4 deadline', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-01T00:00:00Z'));
+      const match = { ...baseMatch, stage: 'round_of_16' as MatchStage, match_datetime: '2026-07-05T20:00:00Z' };
+      expect(canPredict(match)).toBe(true);
+    });
+
+    it('should block round_of_16 prediction after July 4 deadline', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-07-04T16:01:00Z'));
+      const match = { ...baseMatch, stage: 'round_of_16' as MatchStage, match_datetime: '2026-07-05T20:00:00Z' };
+      expect(canPredict(match)).toBe(false);
     });
   });
 });

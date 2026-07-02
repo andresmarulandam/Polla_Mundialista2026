@@ -239,6 +239,7 @@ export function calculatePoints(
 
 export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T04:59:00Z'); // Jun 9 23:59 Colombia
 export const ROUND_OF_32_DEADLINE = new Date('2026-06-28T18:50:00Z'); // Jun 28 13:50 Colombia
+export const ROUND_OF_16_DEADLINE = new Date('2026-07-04T16:00:00Z'); // Jul 4 11:00 Colombia
 
 const REAL_TEAMS = new Set(ALL_TEAMS);
 const NORMALIZED_TEAMS = new Set(ALL_TEAMS.map(normalize));
@@ -278,9 +279,14 @@ export function canPredict(match: {
     return now < GROUP_STAGE_DEADLINE;
   }
 
-  // Ronda de 32: plazo fijo hasta el 28 de junio 10am Colombia
+  // Ronda de 32: plazo fijo hasta el 28 de junio 1pm Colombia
   if (match.stage === 'round_of_32') {
     return now < ROUND_OF_32_DEADLINE;
+  }
+
+  // Octavos de final: plazo fijo hasta el 4 de julio 11am Colombia
+  if (match.stage === 'round_of_16') {
+    return now < ROUND_OF_16_DEADLINE;
   }
 
   // Demas etapas knockout: 48 horas antes del partido
@@ -296,12 +302,15 @@ export function getTimeRemaining(match: {
   const now = new Date();
 
   // Fase de grupos: mostrar tiempo hasta el 9 de junio
-  // Ronda de 32: mostrar tiempo hasta el 28 de junio 10am
+  // Ronda de 32: mostrar tiempo hasta el 28 de junio 1pm
+  // Octavos de final: mostrar tiempo hasta el 4 de julio 11am
   let deadline: Date;
   if (match.stage === 'group_stage') {
     deadline = GROUP_STAGE_DEADLINE;
   } else if (match.stage === 'round_of_32') {
     deadline = ROUND_OF_32_DEADLINE;
+  } else if (match.stage === 'round_of_16') {
+    deadline = ROUND_OF_16_DEADLINE;
   } else {
     deadline = new Date(match.match_datetime);
   }
