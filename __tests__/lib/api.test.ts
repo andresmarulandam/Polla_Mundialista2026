@@ -5,6 +5,7 @@ import {
   formatMatchDateTime,
   GROUP_STAGE_DEADLINE,
   ROUND_OF_16_DEADLINE,
+  QUARTER_FINAL_DEADLINE,
   STAGE_LABELS,
   STAGES_ORDER,
 } from '@/lib/api';
@@ -162,6 +163,12 @@ describe('API Utilities', () => {
   describe('ROUND_OF_16_DEADLINE', () => {
     it('should be July 4 16:00 UTC (July 4 11:00 Colombia)', () => {
       expect(ROUND_OF_16_DEADLINE.toISOString()).toBe('2026-07-04T16:00:00.000Z');
+    });
+  });
+
+  describe('QUARTER_FINAL_DEADLINE', () => {
+    it('should be July 9 18:00 UTC (July 9 13:00 Colombia)', () => {
+      expect(QUARTER_FINAL_DEADLINE.toISOString()).toBe('2026-07-09T18:00:00.000Z');
     });
   });
 

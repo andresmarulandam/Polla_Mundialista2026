@@ -657,7 +657,7 @@ function MatchCard({
               {matchOpen ? (
                 <p className="text-xs text-text-secondary">
                   Los pronósticos de los demás se verán después del{' '}
-                  {match.stage === 'round_of_32' ? '28 de junio' : match.stage === 'round_of_16' ? '4 de julio' : '10 de junio'}.
+                  {match.stage === 'round_of_32' ? '28 de junio' : match.stage === 'round_of_16' ? '4 de julio' : match.stage === 'quarter_final' ? '9 de julio' : '10 de junio'}.
                 </p>
               ) : (
                 match.other_predictions.map((pred) => (
