@@ -241,6 +241,7 @@ export const GROUP_STAGE_DEADLINE = new Date('2026-06-10T04:59:00Z'); // Jun 9 2
 export const ROUND_OF_32_DEADLINE = new Date('2026-06-28T18:50:00Z'); // Jun 28 13:50 Colombia
 export const ROUND_OF_16_DEADLINE = new Date('2026-07-04T16:00:00Z'); // Jul 4 11:00 Colombia
 export const QUARTER_FINAL_DEADLINE = new Date('2026-07-09T18:00:00Z'); // Jul 9 13:00 Colombia
+export const SEMI_FINAL_DEADLINE = new Date('2026-07-14T17:00:00Z'); // Jul 14 12:00 Colombia
 
 const REAL_TEAMS = new Set(ALL_TEAMS);
 const NORMALIZED_TEAMS = new Set(ALL_TEAMS.map(normalize));
@@ -295,7 +296,12 @@ export function canPredict(match: {
     return now < QUARTER_FINAL_DEADLINE;
   }
 
-  // Demas etapas knockout: 48 horas antes del partido
+  // Semifinales: plazo fijo hasta el 14 de julio 12pm Colombia
+  if (match.stage === 'semi_final') {
+    return now < SEMI_FINAL_DEADLINE;
+  }
+
+  // Final y tercer puesto: 48 horas antes del partido
   const matchTime = new Date(match.match_datetime);
   const hoursDiff = (matchTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   return hoursDiff > 48;
@@ -311,6 +317,7 @@ export function getTimeRemaining(match: {
   // Ronda de 32: mostrar tiempo hasta el 28 de junio 1pm
   // Octavos de final: mostrar tiempo hasta el 4 de julio 11am
   // Cuartos de final: mostrar tiempo hasta el 9 de julio 1pm
+  // Semifinales: mostrar tiempo hasta el 14 de julio 12pm
   let deadline: Date;
   if (match.stage === 'group_stage') {
     deadline = GROUP_STAGE_DEADLINE;
@@ -320,6 +327,8 @@ export function getTimeRemaining(match: {
     deadline = ROUND_OF_16_DEADLINE;
   } else if (match.stage === 'quarter_final') {
     deadline = QUARTER_FINAL_DEADLINE;
+  } else if (match.stage === 'semi_final') {
+    deadline = SEMI_FINAL_DEADLINE;
   } else {
     deadline = new Date(match.match_datetime);
   }

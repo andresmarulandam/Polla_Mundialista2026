@@ -88,7 +88,7 @@ export default function HomeClient({
   const [savedSpecialBet, setSavedSpecialBet] = useState(initialSpecialBet);
   const [showOtherSpecialBets, setShowOtherSpecialBets] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(
-    () => new Set(['quarter_final']),
+    () => new Set(['semi_final']),
   );
 
   function toggleStage(stage: string) {
@@ -416,11 +416,12 @@ function MatchCard({
   const pendingHomeScore = pending?.homeScore;
   const pendingAwayScore = pending?.awayScore;
   const isFinished = match.status === 'finished';
+  const hasRealScores = match.home_score !== null && match.away_score !== null;
   const isKnockoutPlaceholder =
     match.stage !== 'group_stage' &&
     !teamsAreReady(match.home_team, match.away_team);
   const points = calculateMatchPoints(match);
-  const showInput = !isFinished && matchOpen;
+  const showInput = !isFinished && !hasRealScores && matchOpen;
   const homeDisplay = editMode
     ? editHome
     : getScoreInputDisplay(pendingHomeScore);
@@ -522,7 +523,7 @@ function MatchCard({
         </div>
 
         <div className="flex items-center gap-2">
-          {isFinished ? (
+          {isFinished || hasRealScores ? (
             <div className="text-2xl font-bold text-secondary min-w-[3rem] text-center">
               {match.home_score}
             </div>
@@ -532,7 +533,7 @@ function MatchCard({
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={1}
+              maxLength={2}
               value={homeDisplay}
               onChange={(e) =>
                 editMode
@@ -540,12 +541,12 @@ function MatchCard({
                   : handleHomeChange(e.target.value)
               }
               disabled={!showInput && !editMode}
-              className="input w-8 text-center text-xl p-0 !border-white"
+              className="input w-10 text-center text-xl p-0 !border-white"
               placeholder=""
             />
           )}
           <span className="text-text-secondary">-</span>
-          {isFinished ? (
+          {isFinished || hasRealScores ? (
             <div className="text-2xl font-bold text-secondary min-w-[3rem] text-center">
               {match.away_score}
             </div>
@@ -555,7 +556,7 @@ function MatchCard({
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={1}
+              maxLength={2}
               value={awayDisplay}
               onChange={(e) =>
                 editMode
@@ -563,7 +564,7 @@ function MatchCard({
                   : handleAwayChange(e.target.value)
               }
               disabled={!showInput && !editMode}
-              className="input w-8 text-center text-xl p-0 !border-white"
+              className="input w-10 text-center text-xl p-0 !border-white"
               placeholder=""
             />
           )}
@@ -657,7 +658,7 @@ function MatchCard({
               {matchOpen ? (
                 <p className="text-xs text-text-secondary">
                   Los pronósticos de los demás se verán después del{' '}
-                  {match.stage === 'round_of_32' ? '28 de junio' : match.stage === 'round_of_16' ? '4 de julio' : match.stage === 'quarter_final' ? '9 de julio' : '10 de junio'}.
+                  {match.stage === 'round_of_32' ? '28 de junio' : match.stage === 'round_of_16' ? '4 de julio' : match.stage === 'quarter_final' ? '9 de julio' : match.stage === 'semi_final' ? '14 de julio' : '10 de junio'}.
                 </p>
               ) : (
                 match.other_predictions.map((pred) => (
