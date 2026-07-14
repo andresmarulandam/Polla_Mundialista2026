@@ -212,7 +212,8 @@ export function calculatePoints(
   stage: MatchStage,
 ): number {
   const isKnockout = stage !== 'group_stage';
-  const multiplier = isKnockout ? 2 : 1;
+  const isHighStakes = stage === 'semi_final' || stage === 'third_place' || stage === 'final';
+  const multiplier = isHighStakes ? 3 : isKnockout ? 2 : 1;
 
   if (homePredicted === homeActual && awayPredicted === awayActual) {
     return 5 * multiplier;

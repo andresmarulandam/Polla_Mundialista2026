@@ -18,16 +18,40 @@ describe('API Utilities', () => {
       expect(calculatePoints(2, 1, 2, 1, 'group_stage')).toBe(5);
     });
 
-    it('should award 10 points for exact score in knockout stage', () => {
-      expect(calculatePoints(2, 1, 2, 1, 'final')).toBe(10);
+    it('should award 10 points for exact score in early knockout (round_of_16)', () => {
+      expect(calculatePoints(2, 1, 2, 1, 'round_of_16')).toBe(10);
+    });
+
+    it('should award 15 points for exact score in high-stakes (semi_final)', () => {
+      expect(calculatePoints(2, 1, 2, 1, 'semi_final')).toBe(15);
+    });
+
+    it('should award 15 points for exact score in final', () => {
+      expect(calculatePoints(2, 1, 2, 1, 'final')).toBe(15);
+    });
+
+    it('should award 15 points for exact score in third_place', () => {
+      expect(calculatePoints(2, 1, 2, 1, 'third_place')).toBe(15);
     });
 
     it('should award 3 points for correct winner in group stage', () => {
       expect(calculatePoints(2, 0, 2, 1, 'group_stage')).toBe(3);
     });
 
-    it('should award 6 points for correct winner in knockout stage', () => {
-      expect(calculatePoints(2, 0, 2, 1, 'final')).toBe(6);
+    it('should award 6 points for correct winner in early knockout (round_of_16)', () => {
+      expect(calculatePoints(2, 0, 2, 1, 'round_of_16')).toBe(6);
+    });
+
+    it('should award 9 points for correct winner in high-stakes (semi_final)', () => {
+      expect(calculatePoints(2, 0, 2, 1, 'semi_final')).toBe(9);
+    });
+
+    it('should award 9 points for correct winner in final', () => {
+      expect(calculatePoints(2, 0, 2, 1, 'final')).toBe(9);
+    });
+
+    it('should award 9 points for correct winner in third_place', () => {
+      expect(calculatePoints(2, 0, 2, 1, 'third_place')).toBe(9);
     });
 
     it('should award 3 points for correct draw in group stage', () => {
