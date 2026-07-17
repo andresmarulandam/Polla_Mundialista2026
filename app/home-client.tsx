@@ -88,7 +88,7 @@ export default function HomeClient({
   const [savedSpecialBet, setSavedSpecialBet] = useState(initialSpecialBet);
   const [showOtherSpecialBets, setShowOtherSpecialBets] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(
-    () => new Set(['semi_final']),
+    () => new Set(['third_place']),
   );
 
   function toggleStage(stage: string) {

@@ -113,24 +113,24 @@ describe('API Utilities', () => {
 
     it('should return days and hours for knockout match', () => {
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-07-01T00:00:00Z'));
-      const match = { match_datetime: '2026-07-04T18:00:00Z', stage: 'final' };
+      jest.setSystemTime(new Date('2026-07-16T00:00:00Z'));
+      const match = { match_datetime: '2026-07-19T19:00:00Z', stage: 'final' };
       const remaining = getTimeRemaining(match);
       expect(remaining).toContain('3d');
     });
 
     it('should return hours for knockout match less than a day away', () => {
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-07-04T13:00:00Z'));
-      const match = { match_datetime: '2026-07-04T18:00:00Z', stage: 'final' };
+      jest.setSystemTime(new Date('2026-07-19T10:00:00Z'));
+      const match = { match_datetime: '2026-07-19T19:00:00Z', stage: 'final' };
       const remaining = getTimeRemaining(match);
-      expect(remaining).toBe('Cierra en 5h');
+      expect(remaining).toBe('Cierra en 8h');
     });
 
     it('should return minutes for knockout match less than an hour away', () => {
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-07-04T17:30:00Z'));
-      const match = { match_datetime: '2026-07-04T18:00:00Z', stage: 'final' };
+      jest.setSystemTime(new Date('2026-07-19T17:30:00Z'));
+      const match = { match_datetime: '2026-07-19T19:00:00Z', stage: 'final' };
       const remaining = getTimeRemaining(match);
       expect(remaining).toBe('Cierra en 30m');
     });
