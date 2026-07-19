@@ -11,6 +11,7 @@ import {
   calculatePoints,
   ALL_TEAMS,
   teamsAreReady,
+  normalize,
 } from '@/lib/api';
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -64,6 +65,8 @@ interface HomeClientProps {
     champion: string | null;
     top_scorer: string | null;
   }[];
+  actualChampion: string | null;
+  actualTopScorer: string | null;
 }
 
 export default function HomeClient({
@@ -71,6 +74,8 @@ export default function HomeClient({
   initialMatches,
   initialSpecialBet,
   otherSpecialBets,
+  actualChampion,
+  actualTopScorer,
 }: Readonly<HomeClientProps>) {
   const router = useRouter();
   const matches = initialMatches;
@@ -305,8 +310,10 @@ export default function HomeClient({
         {savedSpecialBet && (
           <div className="mt-3 text-sm text-text-secondary">
             Tu seleccion:{' '}
-            <span className="font-bold text-white">
-              {savedSpecialBet.champion || '-'} /{' '}
+            <span className={`font-bold ${savedSpecialBet.champion && actualChampion && savedSpecialBet.champion === actualChampion ? 'text-green-400' : 'text-white'}`}>
+              {savedSpecialBet.champion || '-'}
+            </span>{' / '}
+            <span className={`font-bold ${savedSpecialBet.top_scorer && actualTopScorer && normalize(savedSpecialBet.top_scorer) === normalize(actualTopScorer) ? 'text-green-400' : 'text-white'}`}>
               {savedSpecialBet.top_scorer || '-'}
             </span>
           </div>
@@ -334,8 +341,14 @@ export default function HomeClient({
                       <span className="text-text-secondary">
                         {sb.user_name}
                       </span>
-                      <span className="font-bold text-white">
-                        {sb.champion || '-'} / {sb.top_scorer || '-'}
+                      <span>
+                        <span className={`font-bold ${sb.champion && actualChampion && sb.champion === actualChampion ? 'text-green-400' : 'text-white'}`}>
+                          {sb.champion || '-'}
+                        </span>
+                        {' / '}
+                        <span className={`font-bold ${sb.top_scorer && actualTopScorer && normalize(sb.top_scorer) === normalize(actualTopScorer) ? 'text-green-400' : 'text-white'}`}>
+                          {sb.top_scorer || '-'}
+                        </span>
                       </span>
                     </div>
                   ))

@@ -24,7 +24,7 @@ export default async function HomePage() {
   }
 
   // Fetch all data in parallel on the server
-  const [matchesResult, specialBetResult, predictionsResult, usersResult, allSpecialBetsResult] =
+  const [matchesResult, specialBetResult, predictionsResult, usersResult, allSpecialBetsResult, settingsResult] =
     await Promise.all([
       supabaseAdmin
         .from('matches')
@@ -38,6 +38,7 @@ export default async function HomePage() {
       supabaseAdmin.from('predictions').select('*').eq('user_id', session.id),
       supabaseAdmin.from('users').select('id, name'),
       supabaseAdmin.from('special_bets').select('*'),
+      supabaseAdmin.from('tournament_settings').select('*'),
     ]);
 
   // Fetch all predictions in batches (Supabase limits to 1000 rows per query)
@@ -88,6 +89,11 @@ export default async function HomePage() {
     top_scorer: sb.top_scorer,
   }));
 
+  const settingsMap = new Map<string, string>();
+  (settingsResult.data || []).forEach((s: any) => settingsMap.set(s.setting_key, s.setting_value));
+  const actualChampion = settingsMap.get('champion') || null;
+  const actualTopScorer = settingsMap.get('top_scorer') || null;
+
   return (
     <HomeClient
       session={{
@@ -98,6 +104,8 @@ export default async function HomePage() {
       initialMatches={matchesWithPrediction}
       initialSpecialBet={specialBetResult.data || null}
       otherSpecialBets={otherSpecialBets}
+      actualChampion={actualChampion}
+      actualTopScorer={actualTopScorer}
     />
   );
 }
